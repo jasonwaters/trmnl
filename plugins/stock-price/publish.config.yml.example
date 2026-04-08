@@ -1,0 +1,7 @@
+# Publishing Configuration for TRMNL Stock Price Plugin
+#
+# Copy this file to publish.config.yml and customize with your recipe IDs.
+
+recipes:
+  - name: Stock Prices
+    trmnlp_id: your-stock-price-id

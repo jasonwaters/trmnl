@@ -15,6 +15,9 @@ Interactive health metrics tracking with Highcharts. Displays trends for body we
 ### Parcel
 Package delivery tracking using the [Parcel](https://parcelapp.net/) app. Polls the Parcel API directly to show active and recent deliveries with status badges, expected delivery dates, and latest tracking events. Based on the [official TRMNL Parcel plugin](https://github.com/usetrmnl/trmnl_plugins/tree/master/lib/parcel).
 
+### Stock Price
+Real-time stock price tracking using the [Finnhub](https://finnhub.io) API. Displays up to 12 stock tickers with price, daily change, and percentage change. Supports multiple view layouts and configurable currency symbols. Based on the [official TRMNL Stock Price plugin](https://github.com/usetrmnl/trmnl_plugins/tree/master/lib/stock_price).
+
 ## Prerequisites
 
 - **BYOS Server**: A running instance of [LaraPaper](https://github.com/usetrmnl/larapaper) or another BYOS implementation with plugin support
@@ -33,7 +36,8 @@ trmnl-plugins/
     ├── .env              # Shared API credentials (git-ignored)
     ├── calendar/         # Calendar plugin with FullCalendar
     ├── health-chart/     # Health metrics tracking chart plugin
-    └── parcel/           # Package delivery tracking with Parcel app
+    ├── parcel/           # Package delivery tracking with Parcel app
+    └── stock-price/      # Stock price tracking with Finnhub API
 ```
 
 ## Quick Start
@@ -83,6 +87,9 @@ npm run start:health
 
 # Start parcel plugin
 npm run start:parcel
+
+# Start stock price plugin
+npm run start:stock
 ```
 
 Or navigate to specific plugins:
@@ -127,6 +134,8 @@ From the workspace root:
 # Publish specific plugins
 npm run publish:calendar
 npm run publish:health
+npm run publish:parcel
+npm run publish:stock
 ```
 
 Or from within a plugin directory:
@@ -241,6 +250,7 @@ Each plugin has detailed documentation in its own directory:
 - [Calendar Plugin README](plugins/calendar/README.md)
 - [Health Chart Plugin README](plugins/health-chart/README.md)
 - [Parcel Plugin README](plugins/parcel/README.md)
+- [Stock Price Plugin README](plugins/stock-price/README.md)
 
 ## Contributing
 

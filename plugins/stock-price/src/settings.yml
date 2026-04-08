@@ -1,0 +1,49 @@
+---
+strategy: polling
+no_screen_padding: 'no'
+dark_mode: 'no'
+static_data: ''
+polling_verb: get
+framework_version: 2.3.7
+serverless_language:
+polling_url: |
+  {% assign symbols = symbol | split: "," %}{% for s in symbols %}https://finnhub.io/api/v1/quote?symbol={{ s | strip }}&token={{ api_key }}
+  {% endfor %}
+polling_headers: ''
+polling_body: ''
+custom_fields:
+- keyname: author_bio
+  field_type: author_bio
+  name: About This Plugin
+  description: Stock price tracking plugin displaying real-time quotes for stocks and indices. Supports up to 12 tickers with responsive layouts that adapt to the number of symbols tracked.
+  category: finance,personal
+  github_url: https://github.com/jasonwaters/trmnl
+- keyname: symbol
+  field_type: text
+  name: Stock Tickers
+  description: "Comma-separated stock symbols (max 12). Examples: AAPL,GOOG,MSFT or AAPL,SPY,QQQ,DIA"
+  default: AAPL,GOOG,MSFT
+- keyname: api_key
+  field_type: text
+  name: Finnhub API Key
+  description: "Free API key from https://finnhub.io (60 calls/minute free tier)"
+- keyname: change_display
+  field_type: select
+  name: Change Display Type
+  default: percentage
+  options:
+  - Percentage: percentage
+  - Points: points
+- keyname: currency_symbol
+  field_type: select
+  name: Currency Symbol
+  default: usd
+  options:
+  - US Dollar ($): usd
+  - Euro (€): eur
+  - British Pound (£): gbp
+  - Japanese Yen (¥): jpy
+  - Canadian Dollar ($): cad
+  - Swiss Franc (₣): chf
+name: Stock Prices
+refresh_interval: 15

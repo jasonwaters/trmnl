@@ -1,0 +1,32 @@
+{
+  "name": "@trmnl/stock-price",
+  "version": "1.0.0",
+  "description": "Stock price tracking plugin for TRMNL e-ink displays using Finnhub API",
+  "scripts": {
+    "start": "trmnl-dev up",
+    "start:detached": "trmnl-dev up -d",
+    "stop": "trmnl-dev down",
+    "restart": "trmnl-dev restart",
+    "logs": "trmnl-dev logs -f trmnlp",
+    "webhook": "trmnl-dev up webhook-loader",
+    "publish": "trmnl-publish",
+    "publish:prod": "LARAPAPER_URL=https://usetrmnl.com trmnl-publish"
+  },
+  "keywords": [
+    "trmnl",
+    "stock",
+    "finance",
+    "market",
+    "e-ink",
+    "plugin"
+  ],
+  "author": "Jason Waters",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jasonwaters/trmnl"
+  },
+  "dependencies": {
+    "@trmnl-tools/core": "*"
+  }
+}

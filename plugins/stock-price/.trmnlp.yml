@@ -1,0 +1,12 @@
+watch:
+  - .trmnlp.yml
+  - src
+
+custom_fields:
+  symbol: AAPL,GOOG,MSFT
+  api_key: demo
+  change_display: percentage
+  currency_symbol: usd
+
+variables:
+  trmnl: {}

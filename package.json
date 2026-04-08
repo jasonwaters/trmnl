@@ -14,7 +14,9 @@
     "publish:calendar": "npm run publish --workspace=@trmnl/calendar",
     "publish:health": "npm run publish --workspace=@trmnl/health-chart",
     "start:parcel": "npm start --workspace=@trmnl/parcel",
-    "publish:parcel": "npm run publish --workspace=@trmnl/parcel"
+    "publish:parcel": "npm run publish --workspace=@trmnl/parcel",
+    "start:stock": "npm start --workspace=@trmnl/stock-price",
+    "publish:stock": "npm run publish --workspace=@trmnl/stock-price"
   },
   "author": "Jason Waters",
   "license": "MIT"

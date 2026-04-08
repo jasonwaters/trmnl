@@ -1,0 +1,38 @@
+---
+strategy: polling
+no_screen_padding: 'no'
+dark_mode: 'no'
+static_data: ''
+polling_verb: get
+framework_version: 2.3.7
+serverless_language:
+polling_url: https://api.parcel.app/external/deliveries/?filter_mode={{ filter_mode }}
+polling_headers: 'api-key: {{ parcel_api_key }}'
+polling_body: ''
+custom_fields:
+- keyname: author_bio
+  field_type: author_bio
+  name: About This Plugin
+  description: Package delivery tracking using the Parcel app. Displays active and recent deliveries with status, expected delivery dates, and latest tracking events.
+  category: personal,logistics
+  github_url: https://github.com/jasonwaters/trmnl
+- keyname: parcel_api_key
+  field_type: text
+  name: Parcel API Key
+  description: "API key from Parcel app. Generate at https://web.parcelapp.net"
+- keyname: filter_mode
+  field_type: select
+  name: Filter Mode
+  default: active
+  options:
+  - Active Deliveries: active
+  - Recent Deliveries: recent
+- keyname: style
+  field_type: select
+  name: Display Style
+  default: detailed
+  options:
+  - Detailed: detailed
+  - Compact: compact
+name: Parcel Deliveries
+refresh_interval: 360

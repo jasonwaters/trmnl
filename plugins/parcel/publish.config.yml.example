@@ -1,0 +1,7 @@
+# Publishing Configuration for TRMNL Parcel Plugin
+#
+# Copy this file to publish.config.yml and customize with your recipe IDs.
+
+recipes:
+  - name: Parcel Deliveries
+    trmnlp_id: your-parcel-plugin-id

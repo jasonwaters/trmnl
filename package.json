@@ -12,7 +12,9 @@
     "start:calendar": "npm start --workspace=@trmnl/calendar",
     "start:health": "npm start --workspace=@trmnl/health-chart",
     "publish:calendar": "npm run publish --workspace=@trmnl/calendar",
-    "publish:health": "npm run publish --workspace=@trmnl/health-chart"
+    "publish:health": "npm run publish --workspace=@trmnl/health-chart",
+    "start:parcel": "npm start --workspace=@trmnl/parcel",
+    "publish:parcel": "npm run publish --workspace=@trmnl/parcel"
   },
   "author": "Jason Waters",
   "license": "MIT"

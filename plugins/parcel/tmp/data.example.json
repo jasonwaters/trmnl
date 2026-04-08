@@ -1,0 +1,85 @@
+{
+  "deliveries": [
+    {
+      "carrier_code": "ups",
+      "description": "Wireless Headphones",
+      "status_code": 4,
+      "tracking_number": "1Z999AA10123456784",
+      "events": [
+        {
+          "event": "Out for delivery",
+          "date": "2026-04-06 08:30",
+          "location": "Local Distribution Center"
+        },
+        {
+          "event": "Arrived at local facility",
+          "date": "2026-04-06 05:15",
+          "location": "Local Distribution Center"
+        }
+      ],
+      "date_expected": "2026-04-06T18:00:00",
+      "date_expected_end": "2026-04-06T21:00:00"
+    },
+    {
+      "carrier_code": "usps",
+      "description": "Running Shoes",
+      "status_code": 2,
+      "tracking_number": "9400111899223100001234",
+      "events": [
+        {
+          "event": "In transit to destination",
+          "date": "2026-04-05 14:22",
+          "location": "Regional Sort Facility"
+        },
+        {
+          "event": "Departed origin facility",
+          "date": "2026-04-04 09:00",
+          "location": "Origin Post Office"
+        }
+      ],
+      "date_expected": "2026-04-08T20:00:00"
+    },
+    {
+      "carrier_code": "fedex",
+      "description": "Book Order - Clean Code",
+      "status_code": 8,
+      "tracking_number": "794644790132",
+      "events": [
+        {
+          "event": "Shipment information sent to FedEx",
+          "date": "2026-04-05 11:00"
+        }
+      ],
+      "date_expected": "2026-04-10T20:00:00"
+    },
+    {
+      "carrier_code": "amazon",
+      "description": "USB-C Cable Pack",
+      "status_code": 2,
+      "tracking_number": "TBA123456789000",
+      "events": [
+        {
+          "event": "Package arrived at carrier facility",
+          "date": "2026-04-06 02:30",
+          "location": "Delivery Station"
+        }
+      ],
+      "date_expected": "2026-04-07T21:00:00"
+    },
+    {
+      "carrier_code": "dhl",
+      "description": "Camera Lens Filter",
+      "status_code": 2,
+      "tracking_number": "1234567890",
+      "events": [
+        {
+          "event": "Processed through facility",
+          "date": "2026-04-03 16:45",
+          "location": "International Hub"
+        }
+      ],
+      "date_expected": "2026-04-12T20:00:00"
+    }
+  ],
+  "error": null
+}

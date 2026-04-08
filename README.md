@@ -12,6 +12,9 @@ Full-featured calendar display using the FullCalendar library. Supports multiple
 ### Health Chart
 Interactive health metrics tracking with Highcharts. Displays trends for body weight, body fat percentage, BMI, muscle mass, and other health measurements from webhook data.
 
+### Parcel
+Package delivery tracking using the [Parcel](https://parcelapp.net/) app. Polls the Parcel API directly to show active and recent deliveries with status badges, expected delivery dates, and latest tracking events. Based on the [official TRMNL Parcel plugin](https://github.com/usetrmnl/trmnl_plugins/tree/master/lib/parcel).
+
 ## Prerequisites
 
 - **BYOS Server**: A running instance of [LaraPaper](https://github.com/usetrmnl/larapaper) or another BYOS implementation with plugin support
@@ -29,7 +32,8 @@ trmnl-plugins/
 └── plugins/
     ├── .env              # Shared API credentials (git-ignored)
     ├── calendar/         # Calendar plugin with FullCalendar
-    └── health-chart/     # Health metrics tracking chart plugin
+    ├── health-chart/     # Health metrics tracking chart plugin
+    └── parcel/           # Package delivery tracking with Parcel app
 ```
 
 ## Quick Start
@@ -76,6 +80,9 @@ npm run start:calendar
 
 # Start health chart plugin
 npm run start:health
+
+# Start parcel plugin
+npm run start:parcel
 ```
 
 Or navigate to specific plugins:
@@ -233,6 +240,7 @@ Each plugin has detailed documentation in its own directory:
 
 - [Calendar Plugin README](plugins/calendar/README.md)
 - [Health Chart Plugin README](plugins/health-chart/README.md)
+- [Parcel Plugin README](plugins/parcel/README.md)
 
 ## Contributing
 

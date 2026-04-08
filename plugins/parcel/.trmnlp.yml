@@ -1,0 +1,10 @@
+watch:
+  - .trmnlp.yml
+  - src
+
+custom_fields:
+  filter_mode: active
+  style: detailed
+
+variables:
+  trmnl: {}

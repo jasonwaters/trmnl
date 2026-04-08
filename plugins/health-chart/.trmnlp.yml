@@ -1,0 +1,9 @@
+watch:
+  - .trmnlp.yml
+  - src
+
+custom_fields:
+  metric: weight_lbs
+
+variables:
+  trmnl: {}

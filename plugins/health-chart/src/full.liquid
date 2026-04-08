@@ -1,0 +1,182 @@
+<script src="https://usetrmnl.com/js/highcharts/12.3.0/highcharts.js"></script>
+<script src="https://usetrmnl.com/js/chartkick/5.0.1/chartkick.min.js"></script>
+
+<div class="layout layout--col" style="height: 100%;">
+
+  <div class="grid grid--cols-3">
+    <div class="item">
+      <div class="content">
+        <span class="value value--tnums" id="current-weight">-</span>
+        <span class="label">CURRENT</span>
+      </div>
+    </div>
+    <div class="item">
+      <div class="content">
+        <span class="value value--tnums" id="period-delta">-</span>
+        <span class="label">PERIOD CHANGE</span>
+      </div>
+    </div>
+    <div class="item">
+      <div class="content">
+        <span class="value value--tnums" id="last-date">-</span>
+        <span class="label">LAST MEASUREMENT</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="health-chart" style="width: 100%; flex-grow: 1;"></div>
+</div>
+
+<div class="title_bar">
+  <span class="title" id="chart-title">{{ profileName | capitalize }}'s Trend</span>
+  <span class="instance">Last {{ measurements.size }} Measurements</span>
+</div>
+
+<script type="text/javascript">
+  const METRIC_CONFIG = {
+    'weight_lbs': { label: 'Weight', unit: 'lbs', decimals: 1 },
+    'fat_mass_lbs': { label: 'Fat Mass', unit: 'lbs', decimals: 1 },
+    'muscle_mass_lbs': { label: 'Muscle Mass', unit: 'lbs', decimals: 1 },
+    'hydration_lbs': { label: 'Hydration', unit: 'lbs', decimals: 1 },
+    'bone_mass_lbs': { label: 'Bone Mass', unit: 'lbs', decimals: 2 },
+    'fat_ratio_pct': { label: 'Body Fat', unit: '%', decimals: 1 },
+    'fat_free_mass_lbs': { label: 'Lean Mass', unit: 'lbs', decimals: 1 },
+    'bmi': { label: 'BMI', unit: '', decimals: 2 }
+  };
+
+  const createChart = function() {
+    const selectedMetric = "{{ trmnl.plugin_settings.custom_fields_values.metric | default: 'weight_lbs' }}";
+    const config = METRIC_CONFIG[selectedMetric];
+
+    // Parse all measurements from Liquid
+    const allMeasurements = [
+      {% assign sorted = measurements | reverse %}
+      {% for m in sorted %}
+        {
+          date: "{{ m.date }}",
+          measures: {
+            weight_lbs: {{ m.measures.weight_lbs | default: 'null' }},
+            fat_mass_lbs: {{ m.measures.fat_mass_lbs | default: 'null' }},
+            muscle_mass_lbs: {{ m.measures.muscle_mass_lbs | default: 'null' }},
+            hydration_lbs: {{ m.measures.hydration_lbs | default: 'null' }},
+            bone_mass_lbs: {{ m.measures.bone_mass_lbs | default: 'null' }},
+            fat_ratio_pct: {{ m.measures.fat_ratio_pct | default: 'null' }},
+            fat_free_mass_lbs: {{ m.measures.fat_free_mass_lbs | default: 'null' }},
+            bmi: {{ m.measures.bmi | default: 'null' }}
+          }
+        }{% unless forloop.last %},{% endunless %}
+      {% endfor %}
+    ];
+
+    // Extract selected metric data
+    const metricData = allMeasurements
+      .filter(m => m.measures[selectedMetric] !== null)
+      .map(m => [m.date, m.measures[selectedMetric]]);
+
+    if (!metricData.length) return;
+
+    const values = metricData.map(point => point[1]);
+
+    const firstValue = values[0];
+    const currentValue = values[values.length - 1];
+
+    const delta = currentValue - firstValue;
+
+    const latestDateRaw = metricData[metricData.length - 1][0];
+    const latestDate = new Date(latestDateRaw);
+
+    const buffer = (Math.max(...values) - Math.min(...values)) * 0.1;
+
+    const yAxisMin = Math.min(...values) - buffer;
+    const yAxisMax = Math.max(...values) + buffer;
+
+    const formatValue = (value) => {
+      return `${value.toFixed(config.decimals)}${config.unit ? ' ' + config.unit : ''}`;
+    };
+
+    const formatDelta = (value) => {
+      const absValue = Math.abs(value).toFixed(config.decimals);
+      const unit = config.unit ? ' ' + config.unit : '';
+      if (value < 0) return `↓ ${absValue}${unit}`;
+      if (value > 0) return `↑ ${absValue}${unit}`;
+      return `0${unit}`;
+    };
+
+    const formatDate = (date) => {
+      return date.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric"
+      });
+    };
+
+    // Populate header stats
+    document.getElementById('current-weight').textContent = formatValue(currentValue);
+    document.getElementById('period-delta').textContent = formatDelta(delta);
+    document.getElementById('last-date').textContent = formatDate(latestDate);
+
+    // Update title with metric label
+    const profileName = "{{ profileName | capitalize }}";
+    document.getElementById('chart-title').textContent = `${profileName}'s ${config.label} Trend`;
+
+    new Chartkick.LineChart(
+      "health-chart",
+      metricData,
+      {
+        adapter: "highcharts",
+        library: {
+          chart: {
+            backgroundColor: '#FFFFFF',
+            animation: false
+          },
+          credits: { enabled: false },
+          legend: { enabled: false },
+          title: { text: null },
+          plotOptions: {
+            series: {
+              animation: false,
+              lineWidth: 4,
+              color: "#000000",
+              marker: {
+                enabled: false
+              }
+            }
+          },
+          yAxis: {
+            min: yAxisMin,
+            max: yAxisMax,
+            gridLineDashStyle: "dot",
+            gridLineColor: "#000000",
+            title: { text: null },
+            labels: {
+              formatter: function() {
+                return Highcharts.numberFormat(this.value, config.decimals) + (config.unit ? ' ' + config.unit : '');
+              },
+              style: { color: '#000000', fontSize: "16px" }
+            }
+          },
+          xAxis: {
+            type: 'datetime',
+            gridLineDashStyle: "dot",
+            gridLineColor: "#000000",
+            lineWidth: 0,
+            tickWidth: 0,
+            dateTimeLabelFormats: {
+              day: '%b %d'
+            },
+            labels: {
+              style: { color: '#000000', fontSize: "16px" }
+            }
+          }
+        }
+      }
+    );
+  };
+
+  if ("Chartkick" in window) {
+    createChart();
+  } else {
+    window.addEventListener("chartkick:load", createChart, true);
+  }
+</script>
+
+</div>

@@ -1,0 +1,23 @@
+services:
+  trmnlp:
+    image: trmnl/trmnlp:v0.6.0
+    ports:
+      - "4567:4567"
+    volumes:
+      - ./:/plugin
+    command: serve
+
+  webhook-loader:
+    image: curlimages/curl:latest
+    network_mode: "host"
+    depends_on:
+      - trmnlp
+    volumes:
+      - ./tmp/data.json:/data.json:ro
+    command: >
+      sh -c "sleep 3 && 
+      curl -X POST http://localhost:4567/webhook 
+      -H 'Content-Type: application/json' 
+      -d @/data.json && 
+      echo 'Webhook data loaded'"
+    restart: "no"

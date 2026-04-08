@@ -1,0 +1,33 @@
+---
+strategy: webhook
+no_screen_padding: 'no'
+dark_mode: 'no'
+static_data: ''
+polling_verb: get
+framework_version: 2.3.7
+serverless_language:
+polling_url: ''
+polling_headers: ''
+polling_body: ''
+custom_fields:
+- keyname: author_bio
+  field_type: author_bio
+  name: About This Plugin
+  description: Health metrics tracking chart with Highcharts/Chartkick. Track weight, body fat, muscle mass, and more with configurable metrics.
+  category: health,fitness
+  github_url: https://github.com/jasonwaters/trmnl
+- keyname: metric
+  field_type: select
+  name: Metric to Display
+  default: weight_lbs
+  options:
+  - Body Weight: weight_lbs
+  - Fat Mass: fat_mass_lbs
+  - Muscle Mass: muscle_mass_lbs
+  - Hydration: hydration_lbs
+  - Bone Mass: bone_mass_lbs
+  - Body Fat %: fat_ratio_pct
+  - Lean Body Mass: fat_free_mass_lbs
+  - BMI: bmi
+name: Health Chart
+refresh_interval: 1440

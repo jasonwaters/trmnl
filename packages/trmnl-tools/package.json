@@ -1,0 +1,27 @@
+{
+  "name": "@trmnl-tools/core",
+  "version": "1.0.0",
+  "description": "Shared development and publishing tools for TRMNL plugins",
+  "main": "index.js",
+  "bin": {
+    "trmnl-publish": "./scripts/publish.js",
+    "trmnl-dev": "./scripts/dev.js"
+  },
+  "scripts": {
+    "test": "echo \"No tests yet\""
+  },
+  "keywords": [
+    "trmnl",
+    "plugin",
+    "development",
+    "publishing"
+  ],
+  "author": "Jason Waters",
+  "license": "MIT",
+  "dependencies": {
+    "archiver": "^7.0.1",
+    "dotenv": "^17.4.1",
+    "form-data": "^4.0.5",
+    "js-yaml": "^4.1.1"
+  }
+}

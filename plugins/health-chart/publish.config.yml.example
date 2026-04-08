@@ -1,0 +1,7 @@
+# Publishing Configuration for TRMNL Health Chart Plugin
+#
+# Copy this file to publish.config.yml and customize with your recipe IDs.
+
+recipes:
+  - name: Health Chart
+    trmnlp_id: your-health-chart-id

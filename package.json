@@ -1,0 +1,19 @@
+{
+  "name": "trmnl-plugins",
+  "version": "1.0.0",
+  "description": "TRMNL plugin collection with shared development tooling",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "plugins/*"
+  ],
+  "scripts": {
+    "postinstall": "echo '✅ Workspace installed successfully'",
+    "start:calendar": "npm start --workspace=@trmnl/calendar",
+    "start:health": "npm start --workspace=@trmnl/health-chart",
+    "publish:calendar": "npm run publish --workspace=@trmnl/calendar",
+    "publish:health": "npm run publish --workspace=@trmnl/health-chart"
+  },
+  "author": "Jason Waters",
+  "license": "MIT"
+}

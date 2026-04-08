@@ -1,0 +1,28 @@
+---
+strategy: webhook
+no_screen_padding: 'no'
+dark_mode: 'no'
+static_data: ''
+polling_verb: get
+framework_version: 2.3.7
+serverless_language:
+polling_url: ''
+polling_headers: ''
+polling_body: ''
+custom_fields:
+- keyname: author_bio
+  field_type: author_bio
+  name: About This Plugin
+  description: Calendar plugin for displaying events using FullCalendar library. Supports multiple event sources with color coding for e-ink displays.
+  category: personal,calendar
+  github_url: https://github.com/jasonwaters/trmnl
+- keyname: view_mode
+  field_type: select
+  name: View Mode
+  default: twoWeek
+  options:
+  - One Week: oneWeek
+  - Two Weeks: twoWeek
+  - Full Month: month
+name: Calendar - FullCalendar
+refresh_interval: 1440

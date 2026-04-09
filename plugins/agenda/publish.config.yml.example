@@ -1,0 +1,10 @@
+# Publishing Configuration for TRMNL Agenda Plugin
+#
+# This file defines which LaraPaper recipes should be updated when you run `npm run publish`.
+# Each recipe entry requires a name and trmnlp_id.
+#
+# Copy this file to publish.config.yml and customize with your recipe IDs.
+
+recipes:
+  - name: My Agenda
+    trmnlp_id: your-agenda-recipe-id

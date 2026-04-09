@@ -1,0 +1,372 @@
+{% assign view_mode = trmnl.plugin_settings.custom_fields_values.view_mode | default: "basic_list" %}
+
+{% if view_mode == 'basic_list' %}
+<!-- ============================================================================ -->
+<!-- Basic List Mode - TRMNL Framework Components (Compact) -->
+<!-- ============================================================================ -->
+
+<style media="screen">
+  .agenda-list {
+    padding: 8px;
+    justify-content: flex-start !important;
+    align-items: stretch !important;
+  }
+
+  .agenda-item {
+    margin-bottom: 6px;
+  }
+
+  .agenda-item:last-child {
+    margin-bottom: 0;
+  }
+
+  .agenda-item .title--small {
+    font-size: 11px !important;
+  }
+
+  .agenda-item .description {
+    font-size: 10px !important;
+  }
+
+  .agenda-item .label--small {
+    font-size: 9px !important;
+  }
+
+  .agenda-time {
+    white-space: nowrap;
+  }
+</style>
+
+{% assign today_label = generated_at | default: "now" | date: "%a, %b %-d" %}
+{% assign calendar_title = calendar_name | default: "Agenda" %}
+
+<div class="view view--half_vertical">
+<div class="layout layout--col layout--top agenda-list">
+  {% assign window_start_date = generated_at | default: "now" | date: "%Y-%m-%d" %}
+  {% assign window_start_epoch = generated_at | default: "now" | date: "%s" %}
+  {% assign window_end_epoch = window_start_epoch | plus: 604800 %}
+  {% assign window_end_date = window_end_epoch | date: "%Y-%m-%d" %}
+  {% assign last_rendered_date = "" %}
+  {% assign displayed_count = 0 %}
+  {% assign sources = events | map: "source" | uniq %}
+  
+  {% for event in events %}
+        {% if event.start_date > window_end_date %}
+          {% break %}
+        {% endif %}
+        {% assign overlaps_window = false %}
+        {% if event.end_date >= window_start_date and event.start_date <= window_end_date %}
+          {% assign overlaps_window = true %}
+        {% endif %}
+        {% if overlaps_window %}
+          {% assign display_date = event.start_date %}
+          {% if event.start_date < window_start_date %}
+            {% assign display_date = window_start_date %}
+          {% endif %}
+          {% assign displayed_count = displayed_count | plus: 1 %}
+          {% if display_date != last_rendered_date %}
+            {% assign last_rendered_date = display_date %}
+            <span class="label label--small label--underline">{{ display_date | date: "%a, %b %-d" }}</span>
+          {% endif %}
+        {% else %}
+          {% continue %}
+        {% endif %}
+        {% assign source_index = 0 %}
+        {% for source in sources %}
+          {% if source == event.source %}
+            {% assign source_index = forloop.index %}
+            {% break %}
+          {% endif %}
+        {% endfor %}
+        
+        {% assign emphasis_level = source_index | modulo: 3 | plus: 1 %}
+        
+        <div class="item agenda-item item--emphasis-{{ emphasis_level }}">
+          <div class="meta"></div>
+          <div class="content">
+            <span class="title title--small">{{ event.summary | default: "Untitled event" }}</span>
+            {% if event.description and event.description != "" %}
+              <span class="description" data-clamp="1">{{ event.description }}</span>
+            {% endif %}
+            <div class="flex gap--small">
+              {% if event.all_day %}
+                <span class="label label--small label--underline">All Day</span>
+              {% else %}
+                <span
+                  class="label label--small label--underline agenda-time js-local-time"
+                  data-start="{{ event.start }}"
+                  data-end="{{ event.end }}"
+                >
+                  {{ event.start }} - {{ event.end }}
+                </span>
+              {% endif %}
+              {% if event.source %}
+                <span class="label label--small label--underline">{{ event.source }}</span>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+  {% endfor %}
+  
+  {% if displayed_count == 0 %}
+    <div class="item agenda-item">
+      <div class="meta"></div>
+      <div class="content">
+        <span class="title title--small">No events in 7 days</span>
+        <span class="description">Your schedule is clear.</span>
+      </div>
+    </div>
+  {% endif %}
+</div>
+<div class="title_bar">
+  <span class="title">{{ calendar_title }}</span>
+  <span class="instance">{{ today_label }}</span>
+</div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    var timeElements = document.querySelectorAll('.js-local-time');
+    timeElements.forEach(function(el) {
+      var startIso = el.getAttribute('data-start');
+      var endIso = el.getAttribute('data-end');
+      if (!startIso || !endIso) return;
+
+      var startDate = new Date(startIso);
+      var endDate = new Date(endIso);
+      if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) return;
+
+      var startText = startDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+      var endText = endDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+      el.textContent = startText + ' - ' + endText;
+    });
+  });
+</script>
+
+{% else %}
+<!-- ============================================================================ -->
+<!-- Day / List Mode - SimpleCalendarJS (Compact) -->
+<!-- ============================================================================ -->
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&display=swap">
+<link rel="stylesheet" href="https://unpkg.com/simple-calendar-js/dist/simple-calendar-js.min.css">
+<script src="https://unpkg.com/simple-calendar-js/dist/simple-calendar-js.min.js"></script>
+
+<style media="screen">
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+  }
+
+  #calendar-agenda-half {
+    height: 100vh;
+    width: 100vw;
+  }
+
+  #calendar-agenda-half * {
+    font-family: 'Roboto Condensed', sans-serif !important;
+    font-size: 11px;
+    line-height: 1.2;
+  }
+
+  /* Day view - compact */
+  #calendar-agenda-half .sc-event {
+    border-radius: 0 !important;
+    overflow: visible !important;
+    padding: 2px 3px !important;
+  }
+
+  #calendar-agenda-half .sc-event-title {
+    display: block !important;
+    font-size: 10px !important;
+    line-height: 1.2 !important;
+    overflow: visible !important;
+  }
+
+  #calendar-agenda-half .sc-event-time {
+    font-size: 9px !important;
+  }
+
+  /* List view - very compact */
+  #calendar-agenda-half .sc-list-event {
+    border-left: 3px solid black;
+    padding: 5px;
+    margin-bottom: 2px;
+    background-color: white;
+  }
+
+  #calendar-agenda-half .sc-list-event-title {
+    font-weight: 700;
+    margin-bottom: 2px;
+    font-size: 11px;
+  }
+
+  #calendar-agenda-half .sc-list-event-time {
+    font-size: 10px;
+    opacity: 0.8;
+  }
+
+  #calendar-agenda-half .sc-list-date-header {
+    font-weight: 700;
+    font-size: 12px;
+    text-transform: uppercase;
+    margin: 8px 0 5px 0;
+    padding-bottom: 2px;
+    border-bottom: 2px solid black;
+  }
+
+  /* Time slots - more compact */
+  #calendar-agenda-half .sc-time-slot {
+    border: 1px dashed rgba(0, 0, 0, 0.2) !important;
+  }
+
+  /* Day header */
+  #calendar-agenda-half .sc-header-cell {
+    font-family: 'Roboto Condensed', sans-serif !important;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  /* Time column */
+  #calendar-agenda-half .sc-time-col {
+    font-size: 10px;
+    font-weight: 700;
+  }
+
+  /* Reduce hour height for compact view */
+  #calendar-agenda-half {
+    --cal-hour-height: 30px;
+  }
+
+  /* Hide toolbar */
+  #calendar-agenda-half .sc-toolbar {
+    display: none !important;
+  }
+
+  /* Remove scrollbars */
+  #calendar-agenda-half .sc-scroller,
+  #calendar-agenda-half .sc-body {
+    overflow: hidden !important;
+  }
+
+  /* Force day view to fill height */
+  #calendar-agenda-half .sc-day-view,
+  #calendar-agenda-half .sc-list-view,
+  #calendar-agenda-half .sc-view-container,
+  #calendar-agenda-half .sc-container {
+    height: 100% !important;
+    max-height: none !important;
+    min-height: 100vh !important;
+  }
+</style>
+
+<div id="calendar-agenda-half"></div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    var VIEW_MODE = '{{ view_mode }}';
+    
+    function toServerAnchoredDate(serverDate, originalIso) {
+      if (!serverDate || !originalIso) return new Date(originalIso);
+      var original = new Date(originalIso);
+      var parts = serverDate.split('-');
+      if (parts.length !== 3) return original;
+      var year = parseInt(parts[0], 10);
+      var month = parseInt(parts[1], 10) - 1;
+      var day = parseInt(parts[2], 10);
+      // Build with numeric constructor to avoid timezone parsing drift.
+      var anchored = new Date(
+        year,
+        month,
+        day,
+        original.getHours(),
+        original.getMinutes(),
+        original.getSeconds(),
+        0
+      );
+      return anchored;
+    }
+
+    var eventsData = [
+      {% for event in events %}
+      {
+        id: '{{ event.uid }}',
+        title: '{{ event.summary }}',
+        start: toServerAnchoredDate('{{ event.start_date }}', '{{ event.start }}'),
+        end: toServerAnchoredDate('{{ event.end_date }}', '{{ event.end }}'),
+        allDay: {{ event.all_day }},
+        source: '{{ event.source | default: "default" }}'
+      }{% unless forloop.last %},{% endunless %}
+      {% endfor %}
+    ];
+
+    var sources = [...new Set(eventsData.map(e => e.source))];
+    var sourceColors = {};
+    var sourceTextColors = {};
+    
+    var colorPatterns = [
+      ['#000000', '#ffffff'],
+      ['#cccccc', '#000000'],
+      ['#333333', '#ffffff'],
+      ['#e6e6e6', '#000000']
+    ];
+    
+    sources.forEach(function(source, i) {
+      var pattern = colorPatterns[i % colorPatterns.length];
+      sourceColors[source] = pattern[0];
+      sourceTextColors[source] = pattern[1];
+    });
+
+    eventsData.forEach(function(event) {
+      event.color = sourceColors[event.source] || '#000000';
+      event.textColor = sourceTextColors[event.source] || '#ffffff';
+    });
+
+    var fetchEventsFunc;
+    if (VIEW_MODE === 'day') {
+      fetchEventsFunc = function(start, end) {
+        var today = new Date();
+        today.setHours(0, 0, 0, 0);
+        var tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        
+        return eventsData.filter(function(e) {
+          return e.start >= today && e.start < tomorrow;
+        });
+      };
+    } else {
+      fetchEventsFunc = function(start, end) {
+        var today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        return eventsData.filter(function(e) {
+          return e.start >= today;
+        }).slice(0, 6);
+      };
+    }
+
+    var calendar = new SimpleCalendarJs('#calendar-agenda-half', {
+      defaultView: VIEW_MODE,
+      weekStartsOn: 0,
+      use24Hour: false,
+      showToolbar: false,
+      showTodayButton: false,
+      showNavigation: false,
+      showViewSwitcher: false,
+      showYearPicker: false,
+      showTooltips: false,
+      showGridLines: true,
+      showBorder: false,
+      enableDragDrop: false,
+      enableResize: false,
+      listDaysForward: 3,
+      fetchEvents: fetchEventsFunc
+    });
+  });
+</script>
+
+{% endif %}

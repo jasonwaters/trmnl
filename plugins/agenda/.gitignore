@@ -1,0 +1,10 @@
+node_modules/
+npm-debug.log
+.DS_Store
+tmp/*
+!tmp/data.example.json
+*.swp
+*.swo
+.env
+dist/
+publish.config.yml

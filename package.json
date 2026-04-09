@@ -9,8 +9,10 @@
   ],
   "scripts": {
     "postinstall": "echo '✅ Workspace installed successfully'",
+    "start:agenda": "npm start --workspace=@trmnl/agenda",
     "start:calendar": "npm start --workspace=@trmnl/calendar",
     "start:health": "npm start --workspace=@trmnl/health-chart",
+    "publish:agenda": "npm run publish --workspace=@trmnl/agenda",
     "publish:calendar": "npm run publish --workspace=@trmnl/calendar",
     "publish:health": "npm run publish --workspace=@trmnl/health-chart",
     "start:parcel": "npm start --workspace=@trmnl/parcel",

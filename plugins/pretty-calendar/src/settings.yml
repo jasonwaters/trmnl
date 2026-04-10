@@ -1,0 +1,60 @@
+name: 'Pretty Calendar'
+no_screen_padding: 'no'
+dark_mode: 'no'
+strategy: webhook
+polling_verb: post
+polling_url: ''
+polling_headers: ''
+refresh_interval: 60
+id: '210616'
+custom_fields:
+  -
+    keyname: author_bio
+    field_type: author_bio
+    name: 'About This Plugin'
+    description: 'Webhook-powered pretty calendar view. Expects payload with events[] containing start/end ISO timestamps, start_date/end_date, all_day, summary, and description fields.'
+    category: calendar
+  -
+    keyname: show_calendar_items
+    field_type: select
+    name: 'Show calendar items'
+    description: 'Show all your items (over 3 columns) or only the items of today.'
+    help_text: 'This is only for the full view'
+    default: all
+    options:
+      -
+        Today: today
+      -
+        All: all
+  -
+    keyname: show_weeks
+    field_type: select
+    name: 'Weeks in view'
+    description: 'How many weeks would you like to see in the screen?'
+    help_text: 'This is only for the full view, and the half-vertical view.'
+    default: '7'
+    options:
+      -
+        '1 week': 7
+      -
+        '2 weeks': 14
+  -
+    keyname: first_day
+    field_type: select
+    name: 'Week starts on'
+    default: 1
+    options:
+      -
+        Sunday: 0
+      -
+        Monday: 1
+  -
+    keyname: time_format
+    field_type: select
+    name: 'Time format'
+    default: 'am/pm'
+    options:
+      -
+        12-hour (AM/PM): 'am/pm'
+      -
+        24-hour: '24hr'

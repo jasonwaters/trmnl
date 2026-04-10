@@ -5,7 +5,8 @@
   "main": "index.js",
   "bin": {
     "trmnl-publish": "./scripts/publish.js",
-    "trmnl-dev": "./scripts/dev.js"
+    "trmnl-dev": "./scripts/dev.js",
+    "trmnl-pull": "./scripts/pull.js"
   },
   "scripts": {
     "test": "echo \"No tests yet\""

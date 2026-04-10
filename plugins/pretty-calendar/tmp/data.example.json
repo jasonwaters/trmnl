@@ -1,0 +1,31 @@
+{
+  "generated_at": "2026-04-06T12:00:00.000Z",
+  "events": [
+    {
+      "uid": "example-1",
+      "summary": "Team standup",
+      "description": "Daily sync",
+      "status": null,
+      "location": null,
+      "start": "2026-04-06T15:00:00.000Z",
+      "end": "2026-04-06T15:30:00.000Z",
+      "all_day": false,
+      "start_date": "2026-04-06",
+      "end_date": "2026-04-06",
+      "source": "Work"
+    },
+    {
+      "uid": "example-2",
+      "summary": "Trip",
+      "description": null,
+      "status": null,
+      "location": null,
+      "start": "2026-04-07T00:00:00.000Z",
+      "end": "2026-04-10T00:00:00.000Z",
+      "all_day": true,
+      "start_date": "2026-04-07",
+      "end_date": "2026-04-10",
+      "source": "Family"
+    }
+  ]
+}

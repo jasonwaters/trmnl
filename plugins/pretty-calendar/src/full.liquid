@@ -1,0 +1,279 @@
+<div class="layout layout--col layout--top p--2 gap--none">
+  {% comment %} === HEADER: Month & Year === {% endcomment %}
+  <div class="flex flex--row w--full value--small lg:value flex--left flex--center-y p--1 mb--4">
+    <div class="">{{ current_month }}</div>
+    <div class="text--gray-40">{{ year }}</div>
+  </div>
+
+  {% comment %} === DAY NAMES BAR === {% endcomment %}
+  <div class="grid grid--cols-7 gap--1 w--full mb--1">
+    {% for i in (0..6) %}
+    {% assign day_index = first_day | plus: i | modulo: 7 %}
+    {% assign day_label = day_names_short[day_index] %}
+    <div class="col--span-1 text--center text--gray-30 flex flex--row flex--center-x lg:value--xxsmall">
+      {{ day_label }}
+    </div>
+    {% endfor %}
+  </div>
+
+  {% comment %} === CALENDAR DAYS WITH DOTS === {% endcomment %}
+  <div class="grid grid--cols-7 gap--2 w--full border--h-6 pb--5">
+    {% for day_data in days_data limit: show_weeks %}
+    {% assign day_parts = day_data | split: "|" %}
+    {% assign date = day_parts[0] %}
+    {% assign day_num = day_parts[1] %}
+    {% assign day_name = day_parts[2] %}
+    {% assign day_short = day_parts[3] %}
+    {% assign month_name = day_parts[4] %}
+    {% assign event_count = day_parts[5] | plus: 0 %}
+    {% assign is_today = day_parts[6] %}
+
+    {% comment %} Limit dots to max 4 {% endcomment %}
+    {% if event_count > 4 %}
+    {% assign event_count = 4 %}
+    {% endif %}
+
+    <div class="col--span-1 flex flex--col">
+      <div class="rounded--full text--center aspect--1/1 h--14 lg:h--24 {% if is_today == 'true' %}text--white{% elsif date < current_date %}text--gray-40{% endif %}"{% if is_today == 'true' %} style="background-color:#000;"{% endif %}>
+        <div class="value--small lg:value lg:pt--5 pt--3 pb--0.5">{{ day_num }}</div>
+
+        {% if is_today == 'true' %}
+          <div class="flex flex--row flex--center-x gap--xsmall" style="position: relative; top: -2px;">
+            <div class="w--1 h--1 rounded--full bg--white"></div>
+            <div class="w--1 h--1 rounded--full bg--white"></div>
+            <div class="w--1 h--1 rounded--full bg--white"></div>
+          </div>
+        {% elsif event_count > 0 %}
+          <div class="flex flex--row flex--center-x gap--xsmall">
+            {% for dot in (1..event_count) %}
+            <div class="w--1 h--1 rounded--full bg--gray-30"></div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% comment %} === AGENDA LIST === {% endcomment %}
+  {% if show_calendar_items == "all" %}
+
+  {% comment %} Next 3 days in grid columns {% endcomment %}
+  <div class="grid grid--cols-3 gap--large w--full pt--4 p--1">
+    {% assign days_shown = 0 %}
+    {% for day_data in days_data %}
+    {% if days_shown < 3 %}
+      {% assign day_parts = day_data | split: "|" %}
+      {% assign date = day_parts[0] %}
+      {% assign day_num = day_parts[1] %}
+      {% assign day_name = day_parts[2] %}
+      {% assign day_short = day_parts[3] %}
+      {% assign month_name = day_parts[4] %}
+      {% assign month_short = day_parts[7] %}
+      {% assign event_count = day_parts[5] | plus: 0 %}
+      {% assign is_today = day_parts[6] %}
+
+      {% if date >= current_date %}
+      {% comment %} Check if this day has ANY events (including ongoing) {% endcomment %}
+      {% assign has_day_events = false %}
+
+      {% comment %} Check for ongoing multi-day events {% endcomment %}
+      {% for event in calendar_events %}
+      {% assign start_iso = event.start_full | default: event.start %}
+      {% assign end_iso = event.end_full | default: event.end %}
+      {% assign start_epoch_local = start_iso | date: "%s" | plus: utc_offset %}
+      {% assign end_epoch_local = end_iso | date: "%s" | plus: utc_offset %}
+      {% assign event_start_date = event.start_date | default: start_epoch_local | date: "%Y-%m-%d" %}
+      {% assign event_end_date = event.end_date | default: end_epoch_local | date: "%Y-%m-%d" %}
+      {% if event.all_day and date >= event_start_date and date < event_end_date %}
+                                                                  {% assign has_day_events = true %}
+                                                                  {% break %}
+                                                                  {% endif %}
+                                                                  {% endfor %}
+
+                                                                  {% comment %} Check for timed events {% endcomment %}
+                                                                  {% unless has_day_events %}
+                                                                  {% for event in calendar_events %}
+                                                                  {% assign start_iso = event.start_full | default: event.start %}
+                                                                  {% assign start_epoch_local = start_iso | date: "%s" | plus: utc_offset %}
+                                                                  {% assign event_date = event.start_date | default: start_epoch_local | date: "%Y-%m-%d" %}
+        {% if event_date == date and event.all_day == false %}
+        {% assign has_day_events = true %}
+        {% break %}
+        {% endif %}
+        {% endfor %}
+        {% endunless %}
+
+        {% if has_day_events %}
+        <div class="col--span-1 flex flex--col gap--none">
+          {% comment %} Day header {% endcomment %}
+          <div class="flex flex--row w--full value--xsmall lg:value--small flex--left flex--center-y mb--2">
+            {{ day_short }} {{ day_num }} {{ month_short }}
+          </div>
+
+          {% comment %} All-day events (including ongoing) {% endcomment %}
+          {% for event in calendar_events %}
+          {% assign start_iso = event.start_full | default: event.start %}
+          {% assign end_iso = event.end_full | default: event.end %}
+          {% assign start_epoch_local = start_iso | date: "%s" | plus: utc_offset %}
+          {% assign end_epoch_local = end_iso | date: "%s" | plus: utc_offset %}
+          {% assign event_start_date = event.start_date | default: start_epoch_local | date: "%Y-%m-%d" %}
+          {% assign event_end_date = event.end_date | default: end_epoch_local | date: "%Y-%m-%d" %}
+
+          {% if event.all_day and date >= event_start_date and date < event_end_date %}
+                                                                      {% comment %} Show dates only if multi-day {% endcomment %}
+                                                                      {% assign start_timestamp = start_iso | date: "%s" | plus: 0 %}
+            {% assign end_timestamp = end_iso | date: "%s" | plus: 0 %}
+            {% assign total_days = end_timestamp | minus: start_timestamp | divided_by: 86400 %}
+
+            <div class="flex flex--between flex--row py--1 px--2 w--full bg--gray-75 rounded--xsmall text-stroke mb--1 lg:value--xsmall">
+              {{ event.summary }}
+              {% if total_days > 1 %}
+              {% assign start_day = event_start_date | date: "%-d" %}
+              {% assign start_month_num = event_start_date | date: "%m" | plus: 0 %}
+              {% assign start_month = month_names_short[start_month_num] %}
+              {% assign end_day = event_end_date | date: "%-d" %}
+              {% assign end_month_num = event_end_date | date: "%m" | plus: 0 %}
+              {% assign end_month = month_names_short[end_month_num] %}
+              <span class="label--small">{{ start_day }} {{ start_month }} - {{ end_day }} {{ end_month }}</span>
+              {% endif %}
+            </div>
+            {% endif %}
+            {% endfor %}
+
+            {% comment %} Timed events {% endcomment %}
+            {% for event in calendar_events %}
+            {% assign start_iso = event.start_full | default: event.start %}
+            {% assign end_iso = event.end_full | default: event.end %}
+            {% assign start_epoch_local = start_iso | date: "%s" | plus: utc_offset %}
+            {% assign end_epoch_local = end_iso | date: "%s" | plus: utc_offset %}
+            {% assign event_date = event.start_date | default: start_epoch_local | date: "%Y-%m-%d" %}
+            {% if event_date == date and event.all_day == false %}
+
+            {% assign display_start = start_epoch_local | date: "%H:%M" %}
+            {% assign display_end = end_epoch_local | date: "%H:%M" %}
+
+            <div class="px--1 py--2 border--h-6 agenda-item value--xxsmall lg:value--xsmall rounded--xsmall w--full">
+              <div class="text--gray-30 label--small js-local-time" data-start="{{ start_iso }}" data-end="{{ end_iso }}" data-time-format="{{ time_format }}">{{ display_start }} &mdash; {{ display_end }}</div>
+              {{ event.summary }}
+              {% if event.description != "" %}
+              <div class="label--small text--gray-30">{{ event.description }}</div>
+              {% endif %}
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+
+        {% assign days_shown = days_shown | plus: 1 %}
+        {% endif %}
+        {% endif %}
+        {% endif %}
+        {% endfor %}
+      </div>
+
+        {% elsif show_calendar_items == "today" %}
+        {% assign has_events = false %}
+        {% comment %} Today mode - compact single view {% endcomment %}
+        <div class="w--full pt--4">
+          <div class="flex flex--row w--full value--xsmall flex--left flex--center-y mb--2">
+            {{ current_day_short }} {{ day_of_month }} {{ current_month_short }}
+          </div>
+
+          {% comment %} All-day events (including ongoing) {% endcomment %}
+          {% for event in calendar_events %}
+          {% assign start_iso = event.start_full | default: event.start %}
+          {% assign end_iso = event.end_full | default: event.end %}
+          {% assign start_epoch_local = start_iso | date: "%s" | plus: utc_offset %}
+          {% assign end_epoch_local = end_iso | date: "%s" | plus: utc_offset %}
+          {% assign event_start_date = event.start_date | default: start_epoch_local | date: "%Y-%m-%d" %}
+          {% assign event_end_date = event.end_date | default: end_epoch_local | date: "%Y-%m-%d" %}
+
+          {% if event.all_day and current_date >= event_start_date and current_date < event_end_date %}
+                                                                                      {% assign has_events = true %}
+                                                                                      {% assign start_timestamp = start_iso | date: "%s" | plus: 0 %}
+            {% assign end_timestamp = end_iso | date: "%s" | plus: 0 %}
+            {% assign total_days = end_timestamp | minus: start_timestamp | divided_by: 86400 %}
+
+            <div class="flex flex--between flex--row py--1 px--2 w--full bg--gray-75 rounded--xsmall text-stroke mb--1">
+              {{ event.summary }}
+              {% if total_days > 1 %}
+              {% assign start_day = event_start_date | date: "%-d" %}
+              {% assign start_month_num = event_start_date | date: "%m" | plus: 0 %}
+              {% assign start_month = month_names_short[start_month_num] %}
+              {% assign end_day = event_end_date | date: "%-d" %}
+              {% assign end_month_num = event_end_date | date: "%m" | plus: 0 %}
+              {% assign end_month = month_names_short[end_month_num] %}
+              <span class="label--small">{{ start_day }} {{ start_month }} - {{ end_day }} {{ end_month }}</span>
+              {% endif %}
+            </div>
+            {% endif %}
+            {% endfor %}
+
+            {% comment %} Timed events {% endcomment %}
+            {% for event in calendar_events %}
+            {% assign start_iso = event.start_full | default: event.start %}
+            {% assign end_iso = event.end_full | default: event.end %}
+            {% assign start_epoch_local = start_iso | date: "%s" | plus: utc_offset %}
+            {% assign end_epoch_local = end_iso | date: "%s" | plus: utc_offset %}
+            {% assign event_date = event.start_date | default: start_epoch_local | date: "%Y-%m-%d" %}
+            {% if event_date == current_date and event.all_day == false %}
+            {% assign has_events = true %}
+
+            {% assign display_start = start_epoch_local | date: "%H:%M" %}
+            {% assign display_end = end_epoch_local | date: "%H:%M" %}
+
+            <div class="px--1 py--2 border--h-6 agenda-item value--xxsmall rounded--xsmall w--full mb--1">
+              <div class="text--gray-30 label--small js-local-time" data-start="{{ start_iso }}" data-end="{{ end_iso }}" data-time-format="{{ time_format }}">{{ display_start }} &mdash; {{ display_end }}</div>
+              {{ event.summary }}
+              {% if event.description != "" %}
+              <div class="label--small text--gray-30">{{ event.description }}</div>
+              {% endif %}
+            </div>
+            {% endif %}
+            {% endfor %}
+            {% if has_events == false %}
+            <div class="w--full h--full flex flex--col flex--center-y flex--center-x text--center py--10">
+              <span class="value--xxsmall">You have no appointments today</span>
+            </div>
+            {% endif %}
+
+        </div>
+        {% endif %}
+
+      </div>
+
+      <script>
+        (function () {
+          function formatTime(isoString, format) {
+            var date = new Date(isoString);
+            if (Number.isNaN(date.getTime())) {
+              return '';
+            }
+
+            if (format === '24hr') {
+              return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+            }
+
+            return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
+          }
+
+          var timeElements = document.querySelectorAll('.js-local-time');
+          timeElements.forEach(function (element) {
+            var startIso = element.getAttribute('data-start');
+            var endIso = element.getAttribute('data-end');
+            var timeFormat = element.getAttribute('data-time-format') || 'am/pm';
+
+            if (!startIso || !endIso) {
+              return;
+            }
+
+            var startText = formatTime(startIso, timeFormat);
+            var endText = formatTime(endIso, timeFormat);
+            if (!startText || !endText) {
+              return;
+            }
+
+            element.textContent = startText + ' — ' + endText;
+          });
+        })();
+      </script>

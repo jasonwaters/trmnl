@@ -1,0 +1,166 @@
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,1..1000&display=swap" rel="stylesheet">
+
+<style>
+  .layout {
+    font-family: "Google Sans Flex", sans-serif;
+    font-style: normal;
+  }
+</style>
+{% comment %}
+==============================================
+TRMNL Calendar Plugin - Shared Logic
+==============================================
+{% endcomment %}
+
+{% comment %} === PLUGIN SETTINGS === {% endcomment %}
+{% assign show_calendar_items = trmnl.plugin_settings.custom_fields_values.show_calendar_items | default: "all" %}
+{% assign show_weeks = trmnl.plugin_settings.custom_fields_values.show_weeks | default: "7" %}     
+{% assign first_day = trmnl.plugin_settings.custom_fields_values.first_day | default: 1 | plus: 0 %}
+{% assign time_format = trmnl.plugin_settings.custom_fields_values.time_format | default: "am/pm" %}
+{% assign calendar_events = events | default: calendar_source.events | default: empty %}
+{% assign generated_timestamp = generated_at | date: "%s" | plus: 0 %}
+
+{% comment %} === TIME & DATE WITH TIMEZONE === {% endcomment %}
+{% assign utc_offset = trmnl.user.utc_offset %}
+{% assign inferred_offset_seconds = 0 %}
+{% if utc_offset == 0 %}
+  {% assign best_match_count = -1 %}
+  {% assign best_candidate_offset_seconds = 0 %}
+
+  {% for offset_index in (0..52) %}
+    {% assign candidate_offset_seconds = offset_index | times: 1800 | minus: 43200 %}
+    {% assign candidate_match_count = 0 %}
+    {% assign sampled_events = 0 %}
+
+    {% for event in calendar_events %}
+      {% unless event.all_day %}
+        {% assign event_start_iso = event.start_full | default: event.start %}
+        {% assign event_start_utc_seconds = event_start_iso | date: "%s" | plus: 0 %}
+        {% assign shifted_event_seconds = event_start_utc_seconds | plus: candidate_offset_seconds %}
+        {% assign shifted_event_date = shifted_event_seconds | date: "%Y-%m-%d" %}
+        {% assign expected_event_date = event.start_date | default: shifted_event_date %}
+
+        {% if shifted_event_date == expected_event_date %}
+          {% assign candidate_match_count = candidate_match_count | plus: 1 %}
+        {% endif %}
+
+        {% assign sampled_events = sampled_events | plus: 1 %}
+        {% if sampled_events >= 40 %}
+          {% break %}
+        {% endif %}
+      {% endunless %}
+    {% endfor %}
+
+    {% if candidate_match_count > best_match_count %}
+      {% assign best_match_count = candidate_match_count %}
+      {% assign best_candidate_offset_seconds = candidate_offset_seconds %}
+    {% endif %}
+  {% endfor %}
+
+  {% if best_match_count > 0 %}
+    {% assign inferred_offset_seconds = best_candidate_offset_seconds %}
+  {% endif %}
+{% endif %}
+
+{% assign effective_utc_offset = utc_offset %}
+{% if effective_utc_offset == 0 and inferred_offset_seconds != 0 %}
+  {% assign effective_utc_offset = inferred_offset_seconds %}
+{% endif %}
+
+{% assign generated_local_timestamp = generated_timestamp | plus: effective_utc_offset %}
+{% assign local_timestamp = trmnl.system.timestamp_utc | plus: utc_offset %}
+{% assign current_timestamp = local_timestamp %}
+{% if generated_timestamp > 0 %}
+  {% assign current_timestamp = generated_local_timestamp %}
+{% endif %}
+{% assign current_hour = current_timestamp | date: "%H" | plus: 0 %}
+{% assign current_time = current_timestamp | date: "%H:%M" %}
+{% assign current_date = current_timestamp | date: "%Y-%m-%d" %}
+{% assign day_of_month = current_timestamp | date: "%-d" %}
+{% assign year = current_timestamp | date: "%Y" %}
+
+{% comment %} === DAY & MONTH NAMES === {% endcomment %}
+{% assign day_number = current_timestamp | date: "%w" | plus: 0 %}
+{% assign month_number = current_timestamp | date: "%m" | plus: 0 %}
+
+{% assign day_names = "Sunday,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday" | split: "," %}
+{% assign day_names_short = "Sun,Mon,Tue,Wed,Thu,Fri,Sat" | split: "," %}
+{% assign month_names = ",January,February,March,April,May,June,July,August,September,October,November,December" | split: "," %}
+{% assign month_names_short = ",Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec" | split: "," %}
+
+{% assign current_day = day_names[day_number] %}
+{% assign current_day_short = day_names_short[day_number] %}
+{% assign current_month = month_names[month_number] %}
+{% assign current_month_short = month_names_short[month_number] %}
+
+{% comment %} === CALCULATE WEEK START === {% endcomment %}
+{% comment %} first_day: 0=Sunday, 1=Monday, 2=Tuesday, 3=Wednesday, etc. {% endcomment %}
+{% assign current_weekday = current_timestamp | date: "%w" | plus: 0 %}
+
+{% comment %} Calculate days since week start {% endcomment %}
+{% assign days_since_week_start = current_weekday | minus: first_day %}
+
+{% comment %} Handle negative wraparound (e.g. current=Monday(1), first=Wednesday(3) = -2, should be 5) {% endcomment %}
+{% if days_since_week_start < 0 %}
+  {% assign days_since_week_start = days_since_week_start | plus: 7 %}
+{% endif %}
+
+{% comment %} Start date = beginning of this week {% endcomment %}
+{% assign week_start_offset = days_since_week_start | times: -86400 %}
+{% assign week_start_timestamp = current_timestamp | plus: week_start_offset %}
+
+{% comment %} Build 14 days starting from week start {% endcomment %}
+{% assign days_data_string = "" %}
+
+{% for i in (0..13) %}
+  {% assign day_offset = i | times: 86400 %}
+  {% assign check_date_timestamp = week_start_timestamp | plus: day_offset %}
+  {% assign check_date_str = check_date_timestamp | date: "%Y-%m-%d" %}
+  {% assign check_day_num = check_date_timestamp | date: "%-d" %}
+  {% assign check_day_index = check_date_timestamp | date: "%w" | plus: 0 %}
+  {% assign check_day_name = day_names[check_day_index] %}
+  {% assign check_day_short = day_names_short[check_day_index] %}
+  {% assign check_month_index = check_date_timestamp | date: "%m" | plus: 0 %}
+  {% assign check_month_name = month_names[check_month_index] %}
+  {% assign check_month_name_short = month_names_short[check_month_index] %}
+  
+  {% comment %} Count events on this day {% endcomment %}
+  {% assign event_count = 0 %}
+  {% for event in calendar_events %}
+    {% assign start_iso = event.start_full | default: event.start %}
+    {% assign end_iso = event.end_full | default: event.end %}
+    {% assign start_epoch_local = start_iso | date: "%s" | plus: utc_offset %}
+    {% assign end_epoch_local = end_iso | date: "%s" | plus: utc_offset %}
+    {% assign event_start_date = event.start_date | default: start_epoch_local | date: "%Y-%m-%d" %}
+    {% assign event_end_date = event.end_date | default: end_epoch_local | date: "%Y-%m-%d" %}
+    
+    {% if event.all_day %}
+      {% if check_date_str >= event_start_date and check_date_str < event_end_date %}
+        {% assign event_count = event_count | plus: 1 %}
+      {% endif %}
+    {% else %}
+      {% assign event_date = start_epoch_local | date: "%Y-%m-%d" %}
+      {% if event_date == check_date_str %}
+        {% assign event_count = event_count | plus: 1 %}
+      {% endif %}
+    {% endif %}
+  {% endfor %}
+  
+  {% assign is_today = "false" %}
+  {% if check_date_str == current_date %}
+    {% assign is_today = "true" %}
+  {% endif %}
+  
+  {% comment %} Build data string {% endcomment %}
+  {% assign day_data = check_date_str | append: "|" | append: check_day_num | append: "|" | append: check_day_name | append: "|" | append: check_day_short | append: "|" | append: check_month_name | append: "|" | append: event_count | append: "|" | append: is_today | append: "|" | append: check_month_name_short %}
+  
+  {% if days_data_string == "" %}
+    {% assign days_data_string = day_data %}
+  {% else %}
+    {% assign days_data_string = days_data_string | append: "||" | append: day_data %}
+  {% endif %}
+{% endfor %}
+
+{% assign days_data = days_data_string | split: "||" %}

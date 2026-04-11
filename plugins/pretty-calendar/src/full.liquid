@@ -81,8 +81,8 @@
       {% for event in calendar_events %}
       {% assign start_iso = event.start_full | default: event.start %}
       {% assign end_iso = event.end_full | default: event.end %}
-      {% assign start_epoch_local = start_iso | date: "%s" | plus: utc_offset %}
-      {% assign end_epoch_local = end_iso | date: "%s" | plus: utc_offset %}
+      {% assign start_epoch_local = start_iso | date: "%s" | plus: effective_utc_offset %}
+      {% assign end_epoch_local = end_iso | date: "%s" | plus: effective_utc_offset %}
       {% assign event_start_date = event.start_date | default: start_epoch_local | date: "%Y-%m-%d" %}
       {% assign event_end_date = event.end_date | default: end_epoch_local | date: "%Y-%m-%d" %}
       {% if event.all_day and date >= event_start_date and date < event_end_date %}
@@ -95,7 +95,7 @@
                                                                   {% unless has_day_events %}
                                                                   {% for event in calendar_events %}
                                                                   {% assign start_iso = event.start_full | default: event.start %}
-                                                                  {% assign start_epoch_local = start_iso | date: "%s" | plus: utc_offset %}
+                                                                  {% assign start_epoch_local = start_iso | date: "%s" | plus: effective_utc_offset %}
                                                                   {% assign event_date = event.start_date | default: start_epoch_local | date: "%Y-%m-%d" %}
         {% if event_date == date and event.all_day == false %}
         {% assign has_day_events = true %}
@@ -115,8 +115,8 @@
           {% for event in calendar_events %}
           {% assign start_iso = event.start_full | default: event.start %}
           {% assign end_iso = event.end_full | default: event.end %}
-          {% assign start_epoch_local = start_iso | date: "%s" | plus: utc_offset %}
-          {% assign end_epoch_local = end_iso | date: "%s" | plus: utc_offset %}
+          {% assign start_epoch_local = start_iso | date: "%s" | plus: effective_utc_offset %}
+          {% assign end_epoch_local = end_iso | date: "%s" | plus: effective_utc_offset %}
           {% assign event_start_date = event.start_date | default: start_epoch_local | date: "%Y-%m-%d" %}
           {% assign event_end_date = event.end_date | default: end_epoch_local | date: "%Y-%m-%d" %}
 
@@ -145,8 +145,8 @@
             {% for event in calendar_events %}
             {% assign start_iso = event.start_full | default: event.start %}
             {% assign end_iso = event.end_full | default: event.end %}
-            {% assign start_epoch_local = start_iso | date: "%s" | plus: utc_offset %}
-            {% assign end_epoch_local = end_iso | date: "%s" | plus: utc_offset %}
+            {% assign start_epoch_local = start_iso | date: "%s" | plus: effective_utc_offset %}
+            {% assign end_epoch_local = end_iso | date: "%s" | plus: effective_utc_offset %}
             {% assign event_date = event.start_date | default: start_epoch_local | date: "%Y-%m-%d" %}
             {% if event_date == date and event.all_day == false %}
 
@@ -156,7 +156,7 @@
             <div class="px--1 py--2 border--h-6 agenda-item value--xxsmall lg:value--xsmall rounded--xsmall w--full">
               <div class="text--gray-30 label--small js-local-time" data-start="{{ start_iso }}" data-end="{{ end_iso }}" data-time-format="{{ time_format }}">{{ display_start }} &mdash; {{ display_end }}</div>
               {{ event.summary }}
-              {% if event.description != "" %}
+              {% if show_event_descriptions and event.description != "" %}
               <div class="label--small text--gray-30">{{ event.description }}</div>
               {% endif %}
             </div>
@@ -183,8 +183,8 @@
           {% for event in calendar_events %}
           {% assign start_iso = event.start_full | default: event.start %}
           {% assign end_iso = event.end_full | default: event.end %}
-          {% assign start_epoch_local = start_iso | date: "%s" | plus: utc_offset %}
-          {% assign end_epoch_local = end_iso | date: "%s" | plus: utc_offset %}
+          {% assign start_epoch_local = start_iso | date: "%s" | plus: effective_utc_offset %}
+          {% assign end_epoch_local = end_iso | date: "%s" | plus: effective_utc_offset %}
           {% assign event_start_date = event.start_date | default: start_epoch_local | date: "%Y-%m-%d" %}
           {% assign event_end_date = event.end_date | default: end_epoch_local | date: "%Y-%m-%d" %}
 
@@ -213,8 +213,8 @@
             {% for event in calendar_events %}
             {% assign start_iso = event.start_full | default: event.start %}
             {% assign end_iso = event.end_full | default: event.end %}
-            {% assign start_epoch_local = start_iso | date: "%s" | plus: utc_offset %}
-            {% assign end_epoch_local = end_iso | date: "%s" | plus: utc_offset %}
+            {% assign start_epoch_local = start_iso | date: "%s" | plus: effective_utc_offset %}
+            {% assign end_epoch_local = end_iso | date: "%s" | plus: effective_utc_offset %}
             {% assign event_date = event.start_date | default: start_epoch_local | date: "%Y-%m-%d" %}
             {% if event_date == current_date and event.all_day == false %}
             {% assign has_events = true %}
@@ -225,7 +225,7 @@
             <div class="px--1 py--2 border--h-6 agenda-item value--xxsmall rounded--xsmall w--full mb--1">
               <div class="text--gray-30 label--small js-local-time" data-start="{{ start_iso }}" data-end="{{ end_iso }}" data-time-format="{{ time_format }}">{{ display_start }} &mdash; {{ display_end }}</div>
               {{ event.summary }}
-              {% if event.description != "" %}
+              {% if show_event_descriptions and event.description != "" %}
               <div class="label--small text--gray-30">{{ event.description }}</div>
               {% endif %}
             </div>
@@ -237,6 +237,94 @@
             </div>
             {% endif %}
 
+        </div>
+        {% elsif show_calendar_items == "today_three_column" %}
+        {% assign today_event_count = 0 %}
+        {% for event in calendar_events %}
+          {% assign start_iso = event.start_full | default: event.start %}
+          {% assign end_iso = event.end_full | default: event.end %}
+          {% assign start_epoch_local = start_iso | date: "%s" | plus: effective_utc_offset %}
+          {% assign end_epoch_local = end_iso | date: "%s" | plus: effective_utc_offset %}
+          {% assign event_start_date = event.start_date | default: start_epoch_local | date: "%Y-%m-%d" %}
+          {% assign event_end_date = event.end_date | default: end_epoch_local | date: "%Y-%m-%d" %}
+          {% assign event_date = event.start_date | default: start_epoch_local | date: "%Y-%m-%d" %}
+          {% if event.all_day and current_date >= event_start_date and current_date < event_end_date %}
+            {% assign today_event_count = today_event_count | plus: 1 %}
+          {% elsif event.all_day == false and event_date == current_date %}
+            {% assign today_event_count = today_event_count | plus: 1 %}
+          {% endif %}
+        {% endfor %}
+
+        <div class="w--full pt--4">
+          <div class="flex flex--row w--full value--xsmall flex--left flex--center-y mb--2">
+            {{ current_day_short }} {{ day_of_month }} {{ current_month_short }}
+          </div>
+
+          {% if today_event_count > 0 %}
+          <div class="grid grid--cols-3 gap--2 w--full">
+            {% for column in (0..2) %}
+            <div class="col--span-1 flex flex--col gap--none">
+              {% assign today_event_index = 0 %}
+              {% for event in calendar_events %}
+                {% assign start_iso = event.start_full | default: event.start %}
+                {% assign end_iso = event.end_full | default: event.end %}
+                {% assign start_epoch_local = start_iso | date: "%s" | plus: effective_utc_offset %}
+                {% assign end_epoch_local = end_iso | date: "%s" | plus: effective_utc_offset %}
+                {% assign event_start_date = event.start_date | default: start_epoch_local | date: "%Y-%m-%d" %}
+                {% assign event_end_date = event.end_date | default: end_epoch_local | date: "%Y-%m-%d" %}
+                {% if event.all_day and current_date >= event_start_date and current_date < event_end_date %}
+                  {% assign target_column = today_event_index | modulo: 3 %}
+                  {% if target_column == column %}
+                    {% assign start_timestamp = start_iso | date: "%s" | plus: 0 %}
+                    {% assign end_timestamp = end_iso | date: "%s" | plus: 0 %}
+                    {% assign total_days = end_timestamp | minus: start_timestamp | divided_by: 86400 %}
+                    <div class="flex flex--between flex--row py--1 px--2 w--full bg--gray-75 rounded--xsmall text-stroke mb--1">
+                      {{ event.summary }}
+                      {% if total_days > 1 %}
+                        {% assign start_day = event_start_date | date: "%-d" %}
+                        {% assign start_month_num = event_start_date | date: "%m" | plus: 0 %}
+                        {% assign start_month = month_names_short[start_month_num] %}
+                        {% assign end_day = event_end_date | date: "%-d" %}
+                        {% assign end_month_num = event_end_date | date: "%m" | plus: 0 %}
+                        {% assign end_month = month_names_short[end_month_num] %}
+                        <span class="label--small">{{ start_day }} {{ start_month }} - {{ end_day }} {{ end_month }}</span>
+                      {% endif %}
+                    </div>
+                  {% endif %}
+                  {% assign today_event_index = today_event_index | plus: 1 %}
+                {% endif %}
+              {% endfor %}
+
+              {% for event in calendar_events %}
+                {% assign start_iso = event.start_full | default: event.start %}
+                {% assign end_iso = event.end_full | default: event.end %}
+                {% assign start_epoch_local = start_iso | date: "%s" | plus: effective_utc_offset %}
+                {% assign end_epoch_local = end_iso | date: "%s" | plus: effective_utc_offset %}
+                {% assign event_date = event.start_date | default: start_epoch_local | date: "%Y-%m-%d" %}
+                {% if event.all_day == false and event_date == current_date %}
+                  {% assign target_column = today_event_index | modulo: 3 %}
+                  {% if target_column == column %}
+                    {% assign display_start = start_epoch_local | date: "%H:%M" %}
+                    {% assign display_end = end_epoch_local | date: "%H:%M" %}
+                    <div class="px--1 py--2 border--h-6 agenda-item value--xxsmall rounded--xsmall w--full mb--1">
+                      <div class="text--gray-30 label--small js-local-time" data-start="{{ start_iso }}" data-end="{{ end_iso }}" data-time-format="{{ time_format }}">{{ display_start }} &mdash; {{ display_end }}</div>
+                      {{ event.summary }}
+                      {% if show_event_descriptions and event.description != "" %}
+                        <div class="label--small text--gray-30">{{ event.description }}</div>
+                      {% endif %}
+                    </div>
+                  {% endif %}
+                  {% assign today_event_index = today_event_index | plus: 1 %}
+                {% endif %}
+              {% endfor %}
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}
+          <div class="w--full h--full flex flex--col flex--center-y flex--center-x text--center py--10">
+            <span class="value--xxsmall">You have no appointments today</span>
+          </div>
+          {% endif %}
         </div>
         {% endif %}
 

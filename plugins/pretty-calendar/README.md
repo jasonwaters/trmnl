@@ -6,7 +6,7 @@ Webhook-powered TRMNL calendar plugin based on recipe `210616`.
 
 This plugin expects webhook data in the same shape used by `plugins/agenda/tmp/data.json`.
 
-### Required payload shape
+### Payload shape (`generated_at` optional)
 
 ```json
 {
@@ -29,7 +29,7 @@ This plugin expects webhook data in the same shape used by `plugins/agenda/tmp/d
 
 ### Field notes
 
-- `generated_at` anchors the plugin "today" date. This avoids day rollover bugs caused by timezone differences.
+- `generated_at` is optional metadata about feed freshness. The plugin computes "today" dynamically at render time.
 - `events[]` is the calendar event list.
 - `all_day: true` events are treated as date-range events using `start_date`/`end_date`.
 - For timed events, `start` and `end` should be ISO timestamps.
@@ -38,6 +38,7 @@ This plugin expects webhook data in the same shape used by `plugins/agenda/tmp/d
 
 - `show_calendar_items`
   - `today`: show only today's agenda list
+  - `today_three_column`: show only today's agenda list in 3 columns
   - `all`: show multiple upcoming day columns
 - `show_weeks`
   - `7`: render 1 week of day bubbles
@@ -48,6 +49,9 @@ This plugin expects webhook data in the same shape used by `plugins/agenda/tmp/d
 - `time_format`
   - `am/pm`: 12-hour display
   - `24hr`: 24-hour display
+- `show_event_descriptions`
+  - `true`: show event descriptions in agenda items
+  - `false`: hide event descriptions in agenda items
 
 ## Local Development
 

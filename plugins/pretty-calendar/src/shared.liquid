@@ -19,11 +19,30 @@ TRMNL Calendar Plugin - Shared Logic
 {% assign show_weeks = trmnl.plugin_settings.custom_fields_values.show_weeks | default: "7" %}     
 {% assign first_day = trmnl.plugin_settings.custom_fields_values.first_day | default: 1 | plus: 0 %}
 {% assign time_format = trmnl.plugin_settings.custom_fields_values.time_format | default: "am/pm" %}
+{% assign show_event_descriptions_setting = trmnl.plugin_settings.custom_fields_values.show_event_descriptions | default: "true" %}
+{% assign show_event_descriptions = true %}
+{% if show_event_descriptions_setting == "false" or show_event_descriptions_setting == false %}
+  {% assign show_event_descriptions = false %}
+{% endif %}
 {% assign calendar_events = events | default: calendar_source.events | default: empty %}
-{% assign generated_timestamp = generated_at | date: "%s" | plus: 0 %}
 
 {% comment %} === TIME & DATE WITH TIMEZONE === {% endcomment %}
-{% assign utc_offset = trmnl.user.utc_offset %}
+{% assign raw_utc_offset = trmnl.user.utc_offset | plus: 0 %}
+{% assign utc_offset = raw_utc_offset %}
+{% if raw_utc_offset != 0 %}
+  {% assign abs_utc_offset = raw_utc_offset | abs %}
+  {% comment %}
+    Normalize timezone offset to seconds:
+    - +/- 1..24 is interpreted as hours
+    - +/- 25..840 is interpreted as minutes
+    - larger values are assumed to already be seconds
+  {% endcomment %}
+  {% if abs_utc_offset <= 24 %}
+    {% assign utc_offset = raw_utc_offset | times: 3600 %}
+  {% elsif abs_utc_offset <= 840 %}
+    {% assign utc_offset = raw_utc_offset | times: 60 %}
+  {% endif %}
+{% endif %}
 {% assign inferred_offset_seconds = 0 %}
 {% if utc_offset == 0 %}
   {% assign best_match_count = -1 %}
@@ -69,12 +88,8 @@ TRMNL Calendar Plugin - Shared Logic
   {% assign effective_utc_offset = inferred_offset_seconds %}
 {% endif %}
 
-{% assign generated_local_timestamp = generated_timestamp | plus: effective_utc_offset %}
-{% assign local_timestamp = trmnl.system.timestamp_utc | plus: utc_offset %}
+{% assign local_timestamp = trmnl.system.timestamp_utc | plus: effective_utc_offset %}
 {% assign current_timestamp = local_timestamp %}
-{% if generated_timestamp > 0 %}
-  {% assign current_timestamp = generated_local_timestamp %}
-{% endif %}
 {% assign current_hour = current_timestamp | date: "%H" | plus: 0 %}
 {% assign current_time = current_timestamp | date: "%H:%M" %}
 {% assign current_date = current_timestamp | date: "%Y-%m-%d" %}
@@ -131,8 +146,8 @@ TRMNL Calendar Plugin - Shared Logic
   {% for event in calendar_events %}
     {% assign start_iso = event.start_full | default: event.start %}
     {% assign end_iso = event.end_full | default: event.end %}
-    {% assign start_epoch_local = start_iso | date: "%s" | plus: utc_offset %}
-    {% assign end_epoch_local = end_iso | date: "%s" | plus: utc_offset %}
+    {% assign start_epoch_local = start_iso | date: "%s" | plus: effective_utc_offset %}
+    {% assign end_epoch_local = end_iso | date: "%s" | plus: effective_utc_offset %}
     {% assign event_start_date = event.start_date | default: start_epoch_local | date: "%Y-%m-%d" %}
     {% assign event_end_date = event.end_date | default: end_epoch_local | date: "%Y-%m-%d" %}
     

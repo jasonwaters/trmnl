@@ -4,7 +4,8 @@ watch:
   - .trmnlp.yml
   - src
 custom_fields:
-  show_calendar_items: today
+  show_calendar_items: today_three_column
+  show_event_descriptions: 'false'
   show_weeks: '7'
   first_day: 0
   time_format: 'am/pm'

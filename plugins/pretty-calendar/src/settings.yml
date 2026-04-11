@@ -18,12 +18,14 @@ custom_fields:
     keyname: show_calendar_items
     field_type: select
     name: 'Show calendar items'
-    description: 'Show all your items (over 3 columns) or only the items of today.'
+    description: 'Show all your items, only today, or today in 3 balanced columns.'
     help_text: 'This is only for the full view'
     default: all
     options:
       -
         Today: today
+      -
+        Today (3 columns): today_three_column
       -
         All: all
   -
@@ -58,3 +60,14 @@ custom_fields:
         12-hour (AM/PM): 'am/pm'
       -
         24-hour: '24hr'
+  -
+    keyname: show_event_descriptions
+    field_type: select
+    name: 'Show event descriptions'
+    description: 'Display event descriptions in agenda items.'
+    default: 'true'
+    options:
+      -
+        'On': 'true'
+      -
+        'Off': 'false'

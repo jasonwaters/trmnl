@@ -36,18 +36,18 @@
 
     <div class="col--span-1 flex flex--col">
       <div class="rounded--full text--center aspect--1/1 h--14 lg:h--24 {% if is_today == 'true' %}text--white{% elsif date < current_date %}text--gray-40{% endif %}"{% if is_today == 'true' %} style="background-color:#000;"{% endif %}>
-        <div class="value--small lg:value lg:pt--5 pt--3 pb--0.5">{{ day_num }}</div>
+        <div class="value--small pt--3 lg:pt--4 pb--0.5">{{ day_num }}</div>
 
         {% if is_today == 'true' %}
           <div class="flex flex--row flex--center-x gap--xsmall" style="position: relative; top: -2px;">
-            <div class="w--1 h--1 rounded--full bg--white"></div>
-            <div class="w--1 h--1 rounded--full bg--white"></div>
-            <div class="w--1 h--1 rounded--full bg--white"></div>
+            <div class="w--1 h--1 lg:w--2 lg:h--2 rounded--full bg--white"></div>
+            <div class="w--1 h--1 lg:w--2 lg:h--2 rounded--full bg--white"></div>
+            <div class="w--1 h--1 lg:w--2 lg:h--2 rounded--full bg--white"></div>
           </div>
         {% elsif event_count > 0 %}
           <div class="flex flex--row flex--center-x gap--xsmall">
             {% for dot in (1..event_count) %}
-            <div class="w--1 h--1 rounded--full bg--gray-30"></div>
+            <div class="w--1 h--1 lg:w--2 lg:h--2 rounded--full bg--gray-30"></div>
             {% endfor %}
           </div>
         {% endif %}

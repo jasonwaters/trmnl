@@ -10,4 +10,7 @@ custom_fields:
   first_day: 0
   time_format: 'am/pm'
 variables:
-  trmnl: {}
+  trmnl:
+    user:
+      time_zone: America/Denver
+      utc_offset: -21600

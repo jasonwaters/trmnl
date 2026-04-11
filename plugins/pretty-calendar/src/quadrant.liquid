@@ -39,15 +39,15 @@
         <div class="value--small pt--2 pb--0.5">{{ day_num }}</div>
 
         {% if is_today == 'true' %}
-          <div class="flex flex--row flex--center-x gap--xsmall" style="position: relative; top: -2px;">
-            <div class="w--1 h--1 rounded--full bg--white"></div>
-            <div class="w--1 h--1 rounded--full bg--white"></div>
-            <div class="w--1 h--1 rounded--full bg--white"></div>
+          <div class="flex flex--row flex--center-x gap--xsmall" style="position: relative; top: {{ calendar_today_dot_offset_px }}px;">
+            <div class="{{ calendar_day_dot_size_class }} rounded--full bg--white"></div>
+            <div class="{{ calendar_day_dot_size_class }} rounded--full bg--white"></div>
+            <div class="{{ calendar_day_dot_size_class }} rounded--full bg--white"></div>
           </div>
         {% elsif event_count > 0 %}
           <div class="flex flex--row flex--center-x gap--xsmall">
             {% for dot in (1..event_count) %}
-            <div class="w--1 h--1 rounded--full bg--gray-30"></div>
+            <div class="{{ calendar_day_dot_size_class }} rounded--full bg--gray-30"></div>
             {% endfor %}
           </div>
         {% endif %}

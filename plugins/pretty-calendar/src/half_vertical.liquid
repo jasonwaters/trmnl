@@ -38,15 +38,15 @@
         <div class="value--xsmall pt--1.5 pb--0">{{ day_num }}</div>
 
         {% if is_today == 'true' %}
-          <div class="flex flex--row flex--center-x gap--xsmall" style="position: relative; top: -2px;">
-            <div class="w--1 h--1 rounded--full bg--white"></div>
-            <div class="w--1 h--1 rounded--full bg--white"></div>
-            <div class="w--1 h--1 rounded--full bg--white"></div>
+          <div class="flex flex--row flex--center-x gap--xsmall" style="position: relative; top: {{ calendar_today_dot_offset_px }}px;">
+            <div class="{{ calendar_day_dot_size_class }} rounded--full bg--white"></div>
+            <div class="{{ calendar_day_dot_size_class }} rounded--full bg--white"></div>
+            <div class="{{ calendar_day_dot_size_class }} rounded--full bg--white"></div>
           </div>
         {% elsif event_count > 0 %}
           <div class="flex flex--row flex--center-x gap--xsmall">
             {% for dot in (1..event_count) %}
-            <div class="w--1 h--1 rounded--full bg--gray-30"></div>
+            <div class="{{ calendar_day_dot_size_class }} rounded--full bg--gray-30"></div>
             {% endfor %}
           </div>
         {% endif %}
@@ -154,9 +154,13 @@
                   
                   {% assign display_start = start_epoch_local | date: "%H:%M" %}
                   {% assign display_end = end_epoch_local | date: "%H:%M" %}
+                  {% if time_format != "24hr" %}
+                  {% assign display_start = start_epoch_local | date: "%-I:%M %p" %}
+                  {% assign display_end = end_epoch_local | date: "%-I:%M %p" %}
+                  {% endif %}
                   
                   <div class="px--1 py--2 border--h-6 agenda-item value--xxsmall rounded--xsmall w--full">
-                    <div class="text--gray-30 label--small js-local-time" data-start="{{ start_iso }}" data-end="{{ end_iso }}" data-time-format="{{ time_format }}">{{ display_start }} &mdash; {{ display_end }}</div>
+                    <div class="text--gray-30 label--small">{{ display_start }} &mdash; {{ display_end }}</div>
                     {{ event.summary }}
                     {% if show_event_descriptions and event.description != "" %}
                       <div class="label--small text--gray-30">{{ event.description }}</div>
@@ -223,9 +227,13 @@
 
             {% assign display_start = start_epoch_local | date: "%H:%M" %}
             {% assign display_end = end_epoch_local | date: "%H:%M" %}
+            {% if time_format != "24hr" %}
+            {% assign display_start = start_epoch_local | date: "%-I:%M %p" %}
+            {% assign display_end = end_epoch_local | date: "%-I:%M %p" %}
+            {% endif %}
 
             <div class="px--1 py--2 border--h-6 agenda-item value--xxsmall rounded--xsmall w--full mb--1">
-              <div class="text--gray-30 label--small js-local-time" data-start="{{ start_iso }}" data-end="{{ end_iso }}" data-time-format="{{ time_format }}">{{ display_start }} &mdash; {{ display_end }}</div>
+              <div class="text--gray-30 label--small">{{ display_start }} &mdash; {{ display_end }}</div>
               {{ event.summary }}
               {% if show_event_descriptions and event.description != "" %}
               <div class="label--small text--gray-30">{{ event.description }}</div>
@@ -313,8 +321,12 @@
                   {% else %}
                     {% assign display_start = start_epoch_local | date: "%H:%M" %}
                     {% assign display_end = end_epoch_local | date: "%H:%M" %}
+                    {% if time_format != "24hr" %}
+                    {% assign display_start = start_epoch_local | date: "%-I:%M %p" %}
+                    {% assign display_end = end_epoch_local | date: "%-I:%M %p" %}
+                    {% endif %}
                     <div class="px--1 py--2 border--h-6 agenda-item value--xxsmall rounded--xsmall w--full">
-                      <div class="text--gray-30 label--small js-local-time" data-start="{{ start_iso }}" data-end="{{ end_iso }}" data-time-format="{{ time_format }}">{{ display_start }} &mdash; {{ display_end }}</div>
+                      <div class="text--gray-30 label--small">{{ display_start }} &mdash; {{ display_end }}</div>
                       {{ event.summary }}
                       {% if show_event_descriptions and event.description != "" %}
                         <div class="label--small text--gray-30">{{ event.description }}</div>
@@ -340,39 +352,3 @@
         {% endif %}
 
 </div>
-
-<script>
-  (function () {
-    function formatTime(isoString, format) {
-      var date = new Date(isoString);
-      if (Number.isNaN(date.getTime())) {
-        return '';
-      }
-
-      if (format === '24hr') {
-        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
-      }
-
-      return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
-    }
-
-    var timeElements = document.querySelectorAll('.js-local-time');
-    timeElements.forEach(function (element) {
-      var startIso = element.getAttribute('data-start');
-      var endIso = element.getAttribute('data-end');
-      var timeFormat = element.getAttribute('data-time-format') || 'am/pm';
-
-      if (!startIso || !endIso) {
-        return;
-      }
-
-      var startText = formatTime(startIso, timeFormat);
-      var endText = formatTime(endIso, timeFormat);
-      if (!startText || !endText) {
-        return;
-      }
-
-      element.textContent = startText + ' — ' + endText;
-    });
-  })();
-</script>

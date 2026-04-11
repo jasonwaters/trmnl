@@ -24,6 +24,8 @@ TRMNL Calendar Plugin - Shared Logic
 {% if show_event_descriptions_setting == "false" or show_event_descriptions_setting == false %}
   {% assign show_event_descriptions = false %}
 {% endif %}
+{% assign calendar_day_dot_size_class = "w--1 h--1 lg:w--2 lg:h--2" %}
+{% assign calendar_today_dot_offset_px = -2 %}
 {% assign calendar_events = events | default: calendar_source.events | default: empty %}
 
 {% comment %} === TIME & DATE WITH TIMEZONE === {% endcomment %}

@@ -6,4 +6,9 @@ custom_fields:
   metric: weight_lbs
 
 variables:
-  trmnl: {}
+  trmnl:
+    user:
+      locale: en-US
+      time_zone: America/Denver
+      time_zone_iana: America/Denver
+      utc_offset: -21600

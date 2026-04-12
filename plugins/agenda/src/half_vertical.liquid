@@ -37,13 +37,13 @@
   }
 </style>
 
-{% assign today_label = generated_at | default: "now" | date: "%a, %b %-d" %}
+{% assign today_label = agenda_today_label %}
 {% assign calendar_title = calendar_name | default: "Agenda" %}
 
 <div class="view view--half_vertical">
 <div class="layout layout--col layout--top agenda-list">
-  {% assign window_start_date = generated_at | default: "now" | date: "%Y-%m-%d" %}
-  {% assign window_start_epoch = generated_at | default: "now" | date: "%s" %}
+  {% assign window_start_date = agenda_today_local_date %}
+  {% assign window_start_epoch = agenda_now_local_epoch %}
   {% assign window_end_epoch = window_start_epoch | plus: 604800 %}
   {% assign window_end_date = window_end_epoch | date: "%Y-%m-%d" %}
   {% assign last_rendered_date = "" %}
@@ -55,8 +55,14 @@
           {% break %}
         {% endif %}
         {% assign overlaps_window = false %}
-        {% if event.end_date >= window_start_date and event.start_date <= window_end_date %}
-          {% assign overlaps_window = true %}
+        {% if event.all_day %}
+          {% if event.end_date > window_start_date and event.start_date <= window_end_date %}
+            {% assign overlaps_window = true %}
+          {% endif %}
+        {% else %}
+          {% if event.end_date >= window_start_date and event.start_date <= window_end_date %}
+            {% assign overlaps_window = true %}
+          {% endif %}
         {% endif %}
         {% if overlaps_window %}
           {% assign display_date = event.start_date %}
@@ -92,12 +98,14 @@
               {% if event.all_day %}
                 <span class="label label--small label--underline">All Day</span>
               {% else %}
+                {% assign start_local_epoch = event.start | date: "%s" | plus: effective_utc_offset %}
+                {% assign end_local_epoch = event.end | date: "%s" | plus: effective_utc_offset %}
+                {% assign display_start = start_local_epoch | date: "%-I:%M %p" %}
+                {% assign display_end = end_local_epoch | date: "%-I:%M %p" %}
                 <span
-                  class="label label--small label--underline agenda-time js-local-time"
-                  data-start="{{ event.start }}"
-                  data-end="{{ event.end }}"
+                  class="label label--small label--underline agenda-time"
                 >
-                  {{ event.start }} - {{ event.end }}
+                  {{ display_start }} - {{ display_end }}
                 </span>
               {% endif %}
               {% if event.source %}
@@ -123,25 +131,6 @@
   <span class="instance">{{ today_label }}</span>
 </div>
 </div>
-
-<script>
-  document.addEventListener('DOMContentLoaded', function() {
-    var timeElements = document.querySelectorAll('.js-local-time');
-    timeElements.forEach(function(el) {
-      var startIso = el.getAttribute('data-start');
-      var endIso = el.getAttribute('data-end');
-      if (!startIso || !endIso) return;
-
-      var startDate = new Date(startIso);
-      var endDate = new Date(endIso);
-      if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) return;
-
-      var startText = startDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-      var endText = endDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-      el.textContent = startText + ' - ' + endText;
-    });
-  });
-</script>
 
 {% else %}
 <!-- ============================================================================ -->
@@ -270,22 +259,20 @@
   document.addEventListener('DOMContentLoaded', function() {
     var VIEW_MODE = '{{ view_mode }}';
     
-    function toServerAnchoredDate(serverDate, originalIso) {
-      if (!serverDate || !originalIso) return new Date(originalIso);
-      var original = new Date(originalIso);
+    function toServerAnchoredDate(serverDate, hour, minute) {
+      if (!serverDate) return new Date();
       var parts = serverDate.split('-');
-      if (parts.length !== 3) return original;
+      if (parts.length !== 3) return new Date();
       var year = parseInt(parts[0], 10);
       var month = parseInt(parts[1], 10) - 1;
       var day = parseInt(parts[2], 10);
-      // Build with numeric constructor to avoid timezone parsing drift.
       var anchored = new Date(
         year,
         month,
         day,
-        original.getHours(),
-        original.getMinutes(),
-        original.getSeconds(),
+        hour || 0,
+        minute || 0,
+        0,
         0
       );
       return anchored;
@@ -296,8 +283,12 @@
       {
         id: '{{ event.uid }}',
         title: '{{ event.summary }}',
-        start: toServerAnchoredDate('{{ event.start_date }}', '{{ event.start }}'),
-        end: toServerAnchoredDate('{{ event.end_date }}', '{{ event.end }}'),
+        {% assign start_local_epoch = event.start | date: "%s" | plus: effective_utc_offset %}
+        {% assign end_local_epoch = event.end | date: "%s" | plus: effective_utc_offset %}
+        start: toServerAnchoredDate('{{ event.start_date }}', {{ start_local_epoch | date: "%H" | plus: 0 }}, {{ start_local_epoch | date: "%M" | plus: 0 }}),
+        end: toServerAnchoredDate('{{ event.end_date }}', {{ end_local_epoch | date: "%H" | plus: 0 }}, {{ end_local_epoch | date: "%M" | plus: 0 }}),
+        startDateKey: '{{ event.start_date }}',
+        endDateKey: '{{ event.end_date }}',
         allDay: {{ event.all_day }},
         source: '{{ event.source | default: "default" }}'
       }{% unless forloop.last %},{% endunless %}
@@ -329,22 +320,29 @@
     var fetchEventsFunc;
     if (VIEW_MODE === 'day') {
       fetchEventsFunc = function(start, end) {
-        var today = new Date();
-        today.setHours(0, 0, 0, 0);
-        var tomorrow = new Date(today);
-        tomorrow.setDate(tomorrow.getDate() + 1);
+        var todayKey = '{{ agenda_today_local_date }}';
         
         return eventsData.filter(function(e) {
-          return e.start >= today && e.start < tomorrow;
+          if (e.allDay) {
+            return e.startDateKey <= todayKey && e.endDateKey > todayKey;
+          }
+          return e.startDateKey === todayKey;
         });
       };
     } else {
       fetchEventsFunc = function(start, end) {
-        var today = new Date();
-        today.setHours(0, 0, 0, 0);
+        var todayKey = '{{ agenda_today_local_date }}';
         
         return eventsData.filter(function(e) {
-          return e.start >= today;
+          if (e.allDay) {
+            return e.endDateKey > todayKey;
+          }
+          return e.endDateKey >= todayKey;
+        }).sort(function(a, b) {
+          if (a.startDateKey === b.startDateKey) {
+            return a.start - b.start;
+          }
+          return a.startDateKey.localeCompare(b.startDateKey);
         }).slice(0, 6);
       };
     }

@@ -1,0 +1,18 @@
+{% comment %} Timezone-safe shared date context for agenda plugin {% endcomment %}
+{% assign raw_utc_offset = trmnl.user.utc_offset | plus: 0 %}
+{% assign utc_offset = raw_utc_offset %}
+{% if raw_utc_offset != 0 %}
+  {% assign abs_utc_offset = raw_utc_offset | abs %}
+  {% if abs_utc_offset <= 24 %}
+    {% assign utc_offset = raw_utc_offset | times: 3600 %}
+  {% elsif abs_utc_offset <= 840 %}
+    {% assign utc_offset = raw_utc_offset | times: 60 %}
+  {% endif %}
+{% endif %}
+{% assign effective_utc_offset = utc_offset %}
+
+{% assign agenda_now_local_epoch = trmnl.system.timestamp_utc | plus: effective_utc_offset %}
+{% assign agenda_today_local_date = agenda_now_local_epoch | date: "%Y-%m-%d" %}
+{% assign agenda_today_label = agenda_now_local_epoch | date: "%a, %b %-d" %}
+{% assign agenda_tomorrow_local_epoch = agenda_now_local_epoch | plus: 86400 %}
+{% assign agenda_tomorrow_local_date = agenda_tomorrow_local_epoch | date: "%Y-%m-%d" %}

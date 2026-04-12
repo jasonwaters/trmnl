@@ -12,4 +12,9 @@ custom_fields:
 
 # override variables
 variables:
-  trmnl: {}
+  trmnl:
+    user:
+      locale: en-US
+      time_zone: America/Denver
+      time_zone_iana: America/Denver
+      utc_offset: -21600

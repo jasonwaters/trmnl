@@ -8,4 +8,9 @@ custom_fields:
   quote_index: 0
   author_index: 1
 variables:
-  trmnl: {}
+  trmnl:
+    user:
+      locale: en-US
+      time_zone: America/Denver
+      time_zone_iana: America/Denver
+      utc_offset: -21600

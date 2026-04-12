@@ -15,9 +15,10 @@ custom_fields:
 - keyname: author_bio
   field_type: author_bio
   name: About This Plugin
-  description: Stock price tracking plugin displaying real-time quotes for stocks and indices. Supports up to 12 tickers with responsive layouts that adapt to the number of symbols tracked.
+  description: Maintained by Jason Waters. Stock price tracking plugin displaying real-time quotes for stocks and indices. Supports up to 12 tickers with responsive layouts that adapt to the number of symbols tracked.
   category: finance,personal
   github_url: https://github.com/jasonwaters/trmnl
+  learn_more_url: https://jasonwaters.dev
 - keyname: symbol
   field_type: text
   name: Stock Tickers

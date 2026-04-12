@@ -12,8 +12,10 @@ custom_fields:
     keyname: author_bio
     field_type: author_bio
     name: 'About This Plugin'
-    description: 'Webhook-powered pretty calendar view. Expects payload with events[] containing start/end ISO timestamps, start_date/end_date, all_day, summary, and description fields.'
+    description: 'Maintained by Jason Waters. Webhook-powered pretty calendar view. Expects payload with events[] containing start/end ISO timestamps, start_date/end_date, all_day, summary, and description fields.'
     category: calendar
+    github_url: 'https://github.com/jasonwaters/trmnl'
+    learn_more_url: 'https://jasonwaters.dev'
   -
     keyname: show_calendar_items
     field_type: select

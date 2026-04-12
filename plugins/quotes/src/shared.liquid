@@ -1,0 +1,139 @@
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  .quote-serif {
+    font-family: "Cormorant Garamond", "Times New Roman", serif;
+    font-weight: 600;
+    line-height: 1.12;
+    letter-spacing: 0.01em;
+  }
+
+  .quote-attribution {
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+</style>
+
+<script type="text/javascript">
+  (function initializeQuotePlugin() {
+    function parseCsvLine(line) {
+      var values = [];
+      var currentValue = "";
+      var isInsideQuotes = false;
+
+      for (var i = 0; i < line.length; i++) {
+        var character = line[i];
+        var nextCharacter = line[i + 1];
+
+        if (character === '"') {
+          if (isInsideQuotes && nextCharacter === '"') {
+            currentValue += '"';
+            i += 1;
+            continue;
+          }
+
+          isInsideQuotes = !isInsideQuotes;
+          continue;
+        }
+
+        if (character === "," && !isInsideQuotes) {
+          values.push(currentValue);
+          currentValue = "";
+          continue;
+        }
+
+        currentValue += character;
+      }
+
+      values.push(currentValue);
+      return values;
+    }
+
+    function parseCsvRows(csvText) {
+      if (!csvText) {
+        return [];
+      }
+
+      var lines = csvText.split(/\r?\n/).filter(function (line) {
+        return line.trim().length > 0;
+      });
+
+      return lines.map(parseCsvLine);
+    }
+
+    function isLikelyHeaderRow(row, quoteIndex, authorIndex) {
+      if (!row || row.length === 0) {
+        return false;
+      }
+
+      var quoteCell = String(row[quoteIndex] || "").trim().toLowerCase();
+      var authorCell = String(row[authorIndex] || "").trim().toLowerCase();
+      var quoteHeaderPattern = /\b(quote|quotes|text|body|content|saying)\b/;
+      var authorHeaderPattern = /\b(author|by|source|attribution|name)\b/;
+
+      return quoteHeaderPattern.test(quoteCell) || authorHeaderPattern.test(authorCell);
+    }
+
+    function normalizeRows(payload) {
+      if (Array.isArray(payload)) {
+        return payload;
+      }
+
+      if (payload && Array.isArray(payload.data)) {
+        return payload.data;
+      }
+
+      var csvText = "";
+      if (typeof payload === "string") {
+        csvText = payload;
+      } else if (payload && typeof payload.data === "string") {
+        csvText = payload.data;
+      }
+
+      return parseCsvRows(csvText);
+    }
+
+    window.sheetQuotePlugin = {
+      renderRandomQuote: function renderRandomQuote(options) {
+        var quoteSelector = options.quoteSelector || "#quote";
+        var authorSelector = options.authorSelector || "#author";
+        var quoteIndex = options.quoteIndex || 0;
+        var authorIndex = options.authorIndex || 1;
+        var payload = options.payload;
+
+        var quoteElement = document.querySelector(quoteSelector);
+        var authorElement = document.querySelector(authorSelector);
+        if (!quoteElement || !authorElement) {
+          console.error("Sheet Quote: target elements are missing");
+          return;
+        }
+
+        var rows = normalizeRows(payload);
+        var hasHeader = rows.length > 0 && isLikelyHeaderRow(rows[0], quoteIndex, authorIndex);
+        var dataRows = hasHeader ? rows.slice(1) : rows;
+        console.log("Sheet Quote: parsed rows:", rows.length, "header:", hasHeader, "data rows:", dataRows.length);
+
+        if (dataRows.length === 0) {
+          quoteElement.textContent = "No data found. Check Spreadsheet ID.";
+          authorElement.textContent = "";
+          return;
+        }
+
+        var randomRowIndex = Math.floor(Math.random() * dataRows.length);
+        var row = dataRows[randomRowIndex] || [];
+        var quoteContent = row[quoteIndex];
+        var authorContent = row[authorIndex] || "";
+
+        if (!quoteContent) {
+          console.warn("Sheet Quote: quote column empty at row", randomRowIndex, "col", quoteIndex);
+          quoteContent = "Quote column (index " + quoteIndex + ") not found";
+        }
+
+        quoteElement.textContent = String(quoteContent);
+        authorElement.textContent = authorContent ? "— " + String(authorContent) : "";
+      }
+    };
+  })();
+</script>

@@ -13,9 +13,10 @@ custom_fields:
 - keyname: author_bio
   field_type: author_bio
   name: About This Plugin
-  description: Health metrics tracking chart with Highcharts/Chartkick. Track weight, body fat, muscle mass, and more with configurable metrics.
+  description: Maintained by Jason Waters. Health metrics tracking chart with Highcharts/Chartkick. Track weight, body fat, muscle mass, and more with configurable metrics.
   category: health,fitness
   github_url: https://github.com/jasonwaters/trmnl
+  learn_more_url: https://jasonwaters.dev
 - keyname: metric
   field_type: select
   name: Metric to Display

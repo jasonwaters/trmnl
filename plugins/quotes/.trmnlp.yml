@@ -1,0 +1,11 @@
+# TRMNLP configuration
+---
+watch:
+  - .trmnlp.yml
+  - src
+custom_fields:
+  spreadsheet_id: 19hESY6AbY2ZwBph_ndF3zrw9hG__2NLzsbZTMrTlcPk
+  quote_index: 0
+  author_index: 1
+variables:
+  trmnl: {}

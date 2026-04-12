@@ -1,0 +1,27 @@
+<div class="layout layout--col layout--center">
+  <div class="w--full h--full flex flex--col flex--center-y flex--center-x text--center p--2">
+    <div class="icon mb--1">
+      <img src="https://raw.githubusercontent.com/nicholaswilde/trmnl-sheet-quote/refs/heads/main/src/img/sheet-quote.svg" class="w--[6cqw] h--[6cqw] portrait:w--[10cqw] portrait:h--[10cqw]" alt="Quote icon">
+    </div>
+    <span class="value value--large quote-serif" data-value-fit="true" data-value-fit-max-height="170">
+      <span id="quote">Loading quote…</span>
+    </span>
+    <div class="label label--small text--gray-3 mt--2 quote-attribution">
+      <span id="author">Author</span>
+    </div>
+  </div>
+</div>
+
+<script type="text/javascript">
+  try {
+    window.sheetQuotePlugin.renderRandomQuote({
+      payload: {{ data | default: "" | json }},
+      quoteIndex: {{ trmnl.plugin_settings.custom_fields_values.quote_index | plus: 0 }},
+      authorIndex: {{ trmnl.plugin_settings.custom_fields_values.author_index | plus: 0 }}
+    });
+  } catch (error) {
+    console.error("Sheet Quote: Critical Error", error);
+    document.querySelector("#quote").textContent = "Error: " + error.message;
+    document.querySelector("#author").textContent = "";
+  }
+</script>

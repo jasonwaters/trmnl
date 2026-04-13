@@ -1,0 +1,13 @@
+# TRMNLP configuration
+---
+watch:
+  - .trmnlp.yml
+  - src
+custom_fields:
+  location_name: New York, NY
+  latitude: '40.242067851432246'
+  longitude: '-74.03059810259519'
+  temperature_unit: fahrenheit
+  force_light_mode: false
+variables:
+  trmnl: {}

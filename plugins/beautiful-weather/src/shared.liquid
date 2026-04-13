@@ -1,0 +1,173 @@
+{% assign weather_payload = state | default: data | default: payload | default: template %}
+{% if weather_payload == blank and IDX_0 %}
+  {% assign weather_payload = IDX_0 %}
+{% endif %}
+{% if weather_payload and weather_payload.data and weather_payload.current == blank and weather_payload.hourly == blank %}
+  {% assign weather_payload = weather_payload.data %}
+{% endif %}
+{% if weather_payload and weather_payload.payload and weather_payload.current == blank and weather_payload.hourly == blank %}
+  {% assign weather_payload = weather_payload.payload %}
+{% endif %}
+{% if weather_payload and weather_payload.template and weather_payload.current == blank and weather_payload.hourly == blank %}
+  {% assign weather_payload = weather_payload.template %}
+{% endif %}
+{% if weather_payload and weather_payload.state and weather_payload.current == blank and weather_payload.hourly == blank %}
+  {% assign weather_payload = weather_payload.state %}
+{% endif %}
+{% assign wx_current = weather_payload.current | default: current %}
+{% assign wx_hourly = weather_payload.hourly | default: hourly %}
+{% assign wx_current_units = weather_payload.current_units | default: current_units %}
+
+{% assign location_name = trmnl.plugin_settings.custom_fields_values.location_name | default: 'Home' | split: '|' | first %}
+{% assign temp_unit = 'F' %}
+{% assign wind_unit = '' %}
+{% assign wind_unit_setting_raw = trmnl.plugin_settings.custom_fields_values.wind_speed_unit | default: 'kmh' | downcase %}
+{% assign wind_unit_display = 'km/h' %}
+{% if wind_unit_setting_raw == 'ms' %}
+  {% assign wind_unit_display = 'm/s' %}
+{% elsif wind_unit_setting_raw == 'mph' %}
+  {% assign wind_unit_display = 'mph' %}
+{% elsif wind_unit_setting_raw == 'kn' %}
+  {% assign wind_unit_display = 'kn' %}
+{% endif %}
+{% assign precipitation_unit_raw = trmnl.plugin_settings.custom_fields_values.precipitation_unit | default: 'mm' | downcase %}
+{% assign precipitation_unit_display = 'mm' %}
+{% if precipitation_unit_raw == 'inch' %}
+  {% assign precipitation_unit_display = 'in' %}
+{% endif %}
+{% if wx_current_units and wx_current_units.temperature_2m %}
+  {% assign temp_unit_raw = wx_current_units.temperature_2m | downcase %}
+  {% if temp_unit_raw contains 'c' %}
+    {% assign temp_unit = 'C' %}
+  {% endif %}
+{% endif %}
+{% if wx_current_units and wx_current_units.wind_speed_10m %}
+  {% assign wind_unit = wx_current_units.wind_speed_10m %}
+  {% assign wind_unit_raw = wind_unit | downcase | replace: ' ', '' %}
+  {% if wind_unit_raw contains 'km/h' or wind_unit_raw == 'kmh' %}
+    {% assign wind_unit_display = 'km/h' %}
+  {% elsif wind_unit_raw contains 'm/s' or wind_unit_raw == 'ms' %}
+    {% assign wind_unit_display = 'm/s' %}
+  {% elsif wind_unit_raw contains 'mph' or wind_unit_raw contains 'mp/h' %}
+    {% assign wind_unit_display = 'mph' %}
+  {% elsif wind_unit_raw == 'kn' or wind_unit_raw contains 'knot' %}
+    {% assign wind_unit_display = 'kn' %}
+  {% endif %}
+{% endif %}
+{% if wx_current_units and wx_current_units.precipitation %}
+  {% assign precipitation_unit_raw = wx_current_units.precipitation | downcase | replace: ' ', '' %}
+  {% if precipitation_unit_raw contains 'inch' or precipitation_unit_raw == 'in' %}
+    {% assign precipitation_unit_display = 'in' %}
+  {% elsif precipitation_unit_raw contains 'mm' or precipitation_unit_raw contains 'millimeter' %}
+    {% assign precipitation_unit_display = 'mm' %}
+  {% endif %}
+{% endif %}
+
+{% assign now_temp = 72 %}
+{% assign now_feels = 72 %}
+{% assign now_cond_label = 'Cloudy' %}
+{% assign now_icon_key = 'cloud' %}
+{% assign now_humidity = 0 %}
+{% assign now_wind = 0 %}
+{% assign pop_now = 0 %}
+{% assign asof_time = '--:--' %}
+{% assign day_label = 'Today' %}
+{% assign date_label = '' %}
+
+{% assign hourly_times = wx_hourly.time | default: '' %}
+{% assign hourly_temps = wx_hourly.temperature_2m | default: '' %}
+{% assign hourly_pops = wx_hourly.precipitation_probability | default: '' %}
+{% assign hourly_codes = wx_hourly.weather_code | default: '' %}
+{% assign hourly_is_day = wx_hourly.is_day | default: '' %}
+{% assign hourly_count = hourly_times | size %}
+
+{% assign has_state = false %}
+{% if wx_current %}
+  {% assign has_state = true %}
+{% endif %}
+{% if has_state == false and weather_payload != blank %}
+  {% assign has_state = true %}
+{% endif %}
+
+{% assign now_index = 0 %}
+{% assign now_time_raw = wx_current.time | default: '' %}
+{% assign now_code = wx_current.weather_code | default: 0 | round %}
+{% assign now_is_day = wx_current.is_day | default: 1 | round %}
+
+{% if has_state %}
+  {% assign location_name = trmnl.plugin_settings.custom_fields_values.location_name | default: location_name | split: '|' | first %}
+  {% assign asof_time = now_time_raw | date: "%-I:%M %p" %}
+  {% if asof_time == blank %}
+    {% assign asof_time = '--:--' %}
+  {% endif %}
+  {% assign day_label = now_time_raw | date: "%A" %}
+  {% assign date_label = now_time_raw | date: "%b %-d" %}
+
+  {% for t in hourly_times %}
+    {% assign t_epoch = t | date: '%s' | plus: 0 %}
+    {% assign now_epoch = now_time_raw | date: '%s' | plus: 0 %}
+    {% assign delta = t_epoch | minus: now_epoch %}
+    {% if delta < 0 %}
+      {% assign delta = delta | times: -1 %}
+    {% endif %}
+    {% if forloop.first %}
+      {% assign best_delta = delta %}
+      {% assign now_index = forloop.index0 %}
+    {% elsif delta < best_delta %}
+      {% assign best_delta = delta %}
+      {% assign now_index = forloop.index0 %}
+    {% endif %}
+  {% endfor %}
+
+  {% assign now_temp = wx_current.temperature_2m | round %}
+  {% assign now_feels = wx_current.apparent_temperature | round %}
+  {% assign now_humidity = wx_current.relative_humidity_2m | default: 0 | round %}
+  {% assign now_wind = wx_current.wind_speed_10m | default: 0 | round %}
+
+  {% if now_code == 0 %}
+    {% if now_is_day == 0 %}
+      {% assign now_cond_label = 'Clear night' %}
+      {% assign now_icon_key = 'moon' %}
+    {% else %}
+      {% assign now_cond_label = 'Clear' %}
+      {% assign now_icon_key = 'sun' %}
+    {% endif %}
+  {% elsif now_code == 1 %}
+    {% assign now_cond_label = 'Partly cloudy' %}
+    {% assign now_icon_key = 'partly-cloudy' %}
+  {% elsif now_code >= 2 and now_code <= 3 %}
+    {% assign now_cond_label = 'Cloudy' %}
+    {% assign now_icon_key = 'cloud' %}
+  {% elsif now_code >= 45 and now_code <= 48 %}
+    {% assign now_cond_label = 'Hazy' %}
+    {% assign now_icon_key = 'wind' %}
+  {% elsif now_code >= 51 and now_code <= 67 %}
+    {% assign now_cond_label = 'Rain' %}
+    {% assign now_icon_key = 'rain' %}
+  {% elsif now_code == 80 or now_code == 81 or now_code == 82 %}
+    {% assign now_cond_label = 'Rain' %}
+    {% assign now_icon_key = 'rain' %}
+  {% elsif now_code >= 71 and now_code <= 77 %}
+    {% assign now_cond_label = 'Snow' %}
+    {% assign now_icon_key = 'snow' %}
+  {% elsif now_code == 85 or now_code == 86 %}
+    {% assign now_cond_label = 'Snow' %}
+    {% assign now_icon_key = 'snow' %}
+  {% elsif now_code >= 95 and now_code <= 99 %}
+    {% assign now_cond_label = 'Thunderstorms' %}
+    {% assign now_icon_key = 'thunder' %}
+  {% endif %}
+
+  {% assign pop_now = hourly_pops[now_index] | default: 0 | round %}
+  {% if pop_now <= 1 %}
+    {% assign pop_now = pop_now | times: 100 | round %}
+  {% endif %}
+{% endif %}
+
+{% assign header_label = day_label %}
+{% if date_label != blank %}
+  {% assign header_label = header_label | append: ' · ' | append: date_label %}
+{% endif %}
+
+{% capture hourly_icons_csv %}{% if hourly_count > 0 and hourly_times != blank %}{% for t in hourly_times %}{% assign h_code = hourly_codes[forloop.index0] | default: now_code | round %}{% assign h_is_day = hourly_is_day[forloop.index0] | default: now_is_day | round %}{% assign h_icon = '☁' %}{% if h_code == 0 %}{% if h_is_day == 1 %}{% assign h_icon = '☼' %}{% else %}{% assign h_icon = '☾' %}{% endif %}{% elsif h_code == 1 %}{% if h_is_day == 1 %}{% assign h_icon = '⛅' %}{% else %}{% assign h_icon = '☾' %}{% endif %}{% elsif h_code == 2 or h_code == 3 %}{% assign h_icon = '☁' %}{% elsif h_code >= 95 and h_code <= 99 %}{% assign h_icon = '⚡' %}{% elsif h_code >= 45 and h_code <= 48 %}{% assign h_icon = '≋' %}{% elsif h_code >= 51 and h_code <= 67 %}{% assign h_icon = '☂' %}{% elsif h_code == 80 or h_code == 81 or h_code == 82 %}{% assign h_icon = '☂' %}{% elsif h_code >= 71 and h_code <= 77 %}{% assign h_icon = '❄' %}{% elsif h_code == 85 or h_code == 86 %}{% assign h_icon = '❄' %}{% endif %}{{ h_icon }}{% unless forloop.last %},{% endunless %}{% endfor %}{% endif %}{% endcapture %}
+{% assign hourly_icons = hourly_icons_csv | split: ',' %}

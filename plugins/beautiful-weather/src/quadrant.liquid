@@ -1,0 +1,736 @@
+{% capture graph_temps_csv %}{% if has_state and hourly_count > 0 %}{% for i in (0..8) %}{% assign idx_offset = i | minus: 4 %}{% assign source_idx = now_index | plus: idx_offset %}{% if source_idx < 0 %}{% assign source_idx = 0 %}{% elsif source_idx >= hourly_count %}{% assign source_idx = hourly_count | minus: 1 %}{% endif %}{% assign source_temp = hourly_temps[source_idx] | default: now_temp %}{{ source_temp | round }}{% unless forloop.last %},{% endunless %}{% endfor %}{% else %}{{ now_temp }}{% endif %}{% endcapture %}
+{% assign graph_temps_csv = graph_temps_csv | strip %}
+{% assign graph_now_idx = 4 %}
+
+{% assign theme_raw = trmnl.plugin_settings.custom_fields_values.force_light_mode | default: force_light_mode | default: false | append: '' | downcase %}
+{% assign theme_class = 'is-dark' %}
+{% if theme_raw == 'true' or theme_raw == '1' or theme_raw == 'yes' or theme_raw == 'on' %}
+  {% assign theme_class = 'is-light' %}
+{% endif %}
+{% assign hero_icon_ink = '#111111' %}
+{% assign hero_icon_classes = 'w--full h--full image image--contain image-dither image-stroke image-stroke--small' %}
+{% if theme_class == 'is-dark' %}
+  {% assign hero_icon_ink = '#ffffff' %}
+  {% assign hero_icon_classes = hero_icon_classes | append: ' image-stroke--black' %}
+{% endif %}
+{% capture hero_icon_svg %}
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" fill="none" stroke="{{ hero_icon_ink }}" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
+  {% case now_icon_key %}
+    {% when 'sun' %}
+      <circle cx="80" cy="80" r="26"/>
+      <path d="M80 20v18M80 122v18M140 80h-18M38 80H20M122 38l-14 14M52 108l-14 14M122 122l-14-14M52 52L38 38"/>
+    {% when 'moon' %}
+      <path d="M100 24c-10 3-19 9-26 18-9 11-14 24-14 39 0 34 28 62 62 62 10 0 19-2 28-6-12 11-29 19-48 19-38 0-68-30-68-68 0-31 21-58 50-66 5-1 10-2 16-2z"/>
+    {% when 'partly-cloudy' %}
+      <circle cx="58" cy="56" r="18"/>
+      <path d="M58 26v10M58 76v10M88 56H78M38 56H28M79 35l-8 8M45 69l-8 8M79 77l-8-8M45 43l-8-8"/>
+      <path d="M50 114h56c15 0 28-10 28-24s-11-24-25-24c-5-14-18-24-34-24-19 0-35 14-37 33-14 1-25 12-25 25 0 15 12 28 28 28h9"/>
+    {% when 'cloud' %}
+      <path d="M47 116h58c17 0 31-11 31-27 0-15-11-27-26-29-5-16-20-28-38-28-21 0-39 15-41 36-16 1-29 14-29 30 0 17 14 30 31 30h14"/>
+    {% when 'wind' %}
+      <path d="M28 58h60c14 0 22-8 22-18 0-9-7-16-16-16-7 0-12 4-15 10"/>
+      <path d="M20 82h94c18 0 28 9 28 22s-10 22-24 22c-9 0-16-4-20-11"/>
+      <path d="M30 106h54c12 0 19 7 19 16s-7 16-17 16"/>
+    {% when 'rain' %}
+      <path d="M46 98h58c16 0 29-11 29-26 0-14-10-25-24-27-5-15-19-26-36-26-20 0-36 14-39 33-15 1-27 13-27 28 0 16 13 28 29 28h10"/>
+      <path d="M54 116l-8 18M80 116l-8 20M106 116l-8 18"/>
+    {% when 'snow' %}
+      <path d="M46 94h58c16 0 29-11 29-26 0-14-10-25-24-27-5-15-19-26-36-26-20 0-36 14-39 33-15 1-27 13-27 28 0 16 13 28 29 28h10"/>
+      <path d="M54 118v18M46 127h16M48 121l12 12M60 121l-12 12"/>
+      <path d="M86 118v18M78 127h16M80 121l12 12M92 121l-12 12"/>
+    {% when 'thunder' %}
+      <path d="M46 94h58c16 0 29-11 29-26 0-14-10-25-24-27-5-15-19-26-36-26-20 0-36 14-39 33-15 1-27 13-27 28 0 16 13 28 29 28h10"/>
+      <path d="M78 102l-12 24h18l-8 20 28-34H86l10-18"/>
+    {% else %}
+      <path d="M47 116h58c17 0 31-11 31-27 0-15-11-27-26-29-5-16-20-28-38-28-21 0-39 15-41 36-16 1-29 14-29 30 0 17 14 30 31 30h14"/>
+  {% endcase %}
+</svg>
+{% endcapture %}
+{% assign hero_icon_data = hero_icon_svg | strip_newlines | strip | base64_encode %}
+
+{% if has_state == false %}
+<div class="layout layout--col p--small">
+  <div class="outline rounded p--small">
+    <div class="label">Weather</div>
+    <div class="value mt--1.5">No data</div>
+    <div class="label mt--1.5">Open-Meteo payload missing.</div>
+  </div>
+</div>
+{% else %}
+<div class="wx-tile wx-tile--quadrant {{ theme_class }}">
+  <style>
+    .wx-tile {
+      --bg: #000000;
+      --fg: #f1ede2;
+      --muted: #bbb3a5;
+      --rule: #8e877a;
+      --rule-strong: #b7ae9f;
+      width: 100%;
+      height: 100%;
+      box-sizing: border-box;
+      position: relative;
+      padd\69ng: 9px 10px 8px;
+      border: 1px solid var(--rule);
+      border-rad\69us: 18px;
+      background: var(--bg);
+      color: var(--fg);
+      overflow: hidden;
+      display: grid;
+      grid-template-rows: auto 58px minmax(0, 1fr) auto;
+      gap: 6px;
+      font-family: "Avenir Next", "Helvetica Neue", sans-serif;
+      font-variant-numeric: tabular-nums;
+      container-type: inline-size;
+    }
+
+    .wx-tile.is-light {
+      --bg: #f5f1e7;
+      --fg: #11100d;
+      --muted: #5d574d;
+      --rule: #2f2a24;
+      --rule-strong: #11100d;
+    }
+
+    .wx-tile::before {
+      content: "";
+      position: absolute;
+      inset: 6px;
+      border: 1px solid var(--rule);
+      border-rad\69us: 10px;
+      pointer-events: none;
+    }
+
+    .wx-tile * {
+      box-sizing: border-box;
+    }
+
+    .wx-head {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: end;
+      padd\69ng-bottom: 6px;
+      border-bottom: 1px solid var(--rule);
+    }
+
+    .wx-kicker,
+    .wx-updated-label,
+    .wx-summary-label,
+    .wx-slot-time,
+    .wx-slot-rain,
+    .wx-chart-label {
+      font-s\69ze: 6px;
+      line-height: 1;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--muted);
+      fill: var(--muted);
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .wx-kicker {
+      marg\69n-bottom: 3px;
+    }
+
+    .wx-place {
+      font: 700 17px/0.94 "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+      letter-spacing: -0.045em;
+      width: 100%;
+      max-width: none;
+    }
+
+    .wx-updated {
+      display: grid;
+      gap: 3px;
+      justify-items: end;
+      text-al\69gn: right;
+    }
+
+    .wx-updated-time {
+      font: 700 12px/0.92 "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+      letter-spacing: -0.04em;
+      white-space: nowrap;
+    }
+
+    .wx-chart {
+      position: relative;
+      min-height: 0;
+      padd\69ng-top: 2px;
+    }
+
+    .wx-chart-svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+      overflow: visible;
+    }
+
+    .wx-chart-guide {
+      stroke: var(--rule-strong);
+      stroke-width: 1.4;
+      opacity: 0.78;
+      shape-rendering: crispEdges;
+      vector-effect: non-scaling-stroke;
+      fill: none;
+    }
+
+    .wx-chart-path {
+      stroke: var(--fg);
+      stroke-width: 1.1;
+      fill: none;
+      opacity: 0.82;
+    }
+
+    .wx-chart-point {
+      fill: var(--fg);
+      opacity: 0.95;
+    }
+
+    .wx-chart-point.is-fade {
+      opacity: 0.5;
+    }
+
+    .wx-chart-now-line {
+      stroke: var(--fg);
+      stroke-width: 1.6;
+      shape-rendering: crispEdges;
+      vector-effect: non-scaling-stroke;
+      fill: none;
+    }
+
+    .wx-chart-value {
+      font: 700 30px/0.9 "Baskerville", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+      letter-spacing: -0.04em;
+      fill: var(--fg);
+      white-space: nowrap;
+    }
+
+    .wx-chart .wx-chart-label {
+      font-s\69ze: 13px;
+      letter-spacing: 0.16em;
+    }
+
+    .wx-main {
+      display: grid;
+      grid-template-columns: minmax(0, 1.04fr) minmax(0, 0.96fr);
+      gap: 8px;
+      min-height: 0;
+      align-items: center;
+      padd\69ng: 4px 0 2px;
+    }
+
+    .wx-hero {
+      display: flex;
+      align-items: center;
+      justify-cont\65nt: center;
+      width: 100%;
+      height: 100%;
+      text-al\69gn: center;
+      transform: translateY(-15px);
+    }
+
+    .wx-hero-line {
+      display: grid;
+      grid-template-columns: auto auto;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .wx-hero-mark {
+      width: 38px;
+      height: 38px;
+      opacity: 0.92;
+      transform: translateY(5px);
+      pointer-events: none;
+    }
+
+    .wx-hero-mark img {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .wx-hero-copy {
+      display: grid;
+      justify-items: center;
+      gap: 4px;
+    }
+
+    .wx-reading {
+      display: flex;
+      align-items: flex-start;
+      justify-cont\65nt: center;
+      gap: 4px;
+    }
+
+    .wx-temp {
+      font: 700 72px/0.8 "Baskerville", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+      letter-spacing: -0.055em;
+    }
+
+    .wx-unit {
+      marg\69n-top: 10px;
+      font-s\69ze: 20px;
+      line-height: 1;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .wx-condition {
+      font: 600 13px/0.94 "Avenir Next Condensed", "Avenir Next", "Helvetica Neue", sans-serif;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      width: 100%;
+      text-al\69gn: center;
+      max-width: 12ch;
+      text-wrap: balance;
+    }
+
+    .wx-summary {
+      width: 100%;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      border: 1px solid var(--rule);
+      align-self: stretch;
+      transform: translateY(-18px);
+    }
+
+    .wx-summary-item {
+      display: grid;
+      justify-items: center;
+      gap: 3px;
+      padd\69ng: 5px 4px 4px;
+      border-right: 1px solid var(--rule);
+      border-bottom: 1px solid var(--rule);
+      text-al\69gn: center;
+      min-width: 0;
+      align-content: center;
+    }
+
+    .wx-summary-item:nth-child(2n) {
+      border-right: none;
+    }
+
+    .wx-summary-item:nth-last-child(-n + 2) {
+      border-bottom: none;
+    }
+
+    .wx-summary-head {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      min-height: 7px;
+    }
+
+    .wx-stat-icon {
+      position: relative;
+      display: inline-block;
+      flex: 0 0 auto;
+      color: var(--muted);
+    }
+
+    .wx-stat-icon.is-feels {
+      width: 6px;
+      height: 9px;
+      border: 1px solid var(--muted);
+      border-rad\69us: 5px;
+    }
+
+    .wx-stat-icon.is-feels::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      bottom: 1px;
+      width: 1px;
+      height: 3px;
+      background: var(--muted);
+      transform: translateX(-50%);
+    }
+
+    .wx-stat-icon.is-feels::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      bottom: -3px;
+      width: 4px;
+      height: 4px;
+      border: 1px solid var(--muted);
+      border-rad\69us: 999px;
+      background: var(--bg);
+      transform: translateX(-50%);
+    }
+
+    .wx-stat-icon.is-rain {
+      font-s\69ze: 8px;
+      line-height: 1;
+      transform: translateY(-1px);
+    }
+
+    .wx-stat-icon.is-rain::before {
+      content: "☂";
+    }
+
+    .wx-stat-icon.is-humidity {
+      width: 6px;
+      height: 6px;
+      border: 1px solid var(--muted);
+      border-rad\69us: 60% 60% 60% 0;
+      transform: rotate(-45deg);
+    }
+
+    .wx-stat-icon.is-wind {
+      width: 8px;
+      height: 7px;
+    }
+
+    .wx-stat-icon.is-wind::before,
+    .wx-stat-icon.is-wind::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      height: 1px;
+      background: var(--muted);
+      border-rad\69us: 999px;
+    }
+
+    .wx-stat-icon.is-wind::before {
+      top: 1px;
+      width: 8px;
+      box-shadow: 0 2px 0 var(--muted), 2px 4px 0 var(--muted);
+    }
+
+    .wx-stat-icon.is-wind::after {
+      top: 1px;
+      width: 4px;
+      left: auto;
+      right: 0;
+    }
+
+    .wx-summary-value {
+      font: 700 12px/0.94 "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+      letter-spacing: -0.03em;
+      white-space: nowrap;
+    }
+
+    .wx-forecast {
+      padd\69ng-top: 4px;
+      border-top: 1px solid var(--rule);
+    }
+
+    .wx-slots {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      border-left: 1px solid var(--rule);
+    }
+
+    .wx-slot {
+      min-width: 0;
+      display: grid;
+      justify-items: center;
+      gap: 2px;
+      padd\69ng: 4px 2px 3px;
+      border-right: 1px solid var(--rule);
+      text-al\69gn: center;
+    }
+
+    .wx-slot-main {
+      display: flex;
+      align-items: center;
+      justify-cont\65nt: center;
+      gap: 3px;
+      min-width: 0;
+    }
+
+    .wx-slot-icon {
+      font-s\69ze: 11px;
+      line-height: 0.9;
+      flex: 0 0 auto;
+    }
+
+    .wx-slot-temp {
+      font: 700 12px/0.92 "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+      letter-spacing: -0.04em;
+      white-space: nowrap;
+    }
+
+    @container (min-width: 460px) {
+      .wx-tile {
+        grid-template-rows: auto 70px minmax(0, 1fr) auto;
+        padd\69ng: 11px 13px 10px;
+        gap: 7px;
+      }
+
+      .wx-place {
+        font-s\69ze: 20px;
+      }
+
+      .wx-updated-time {
+        font-s\69ze: 14px;
+      }
+
+      .wx-main {
+        gap: 10px;
+        padd\69ng-top: 6px;
+      }
+
+      .wx-hero {
+        transform: none;
+      }
+
+      .wx-hero-line {
+        gap: 14px;
+      }
+
+      .wx-hero-mark {
+        width: 46px;
+        height: 46px;
+        transform: translateY(6px);
+      }
+
+      .wx-temp {
+        font-s\69ze: 82px;
+      }
+
+      .wx-unit {
+        font-s\69ze: 22px;
+      }
+
+      .wx-condition {
+        font-s\69ze: 14px;
+      }
+
+      .wx-summary-value {
+        font-s\69ze: 14px;
+      }
+
+      .wx-summary {
+        transform: none;
+      }
+
+      .wx-slot-temp {
+        font-s\69ze: 13px;
+      }
+    }
+  </style>
+
+  <header class="wx-head">
+    <div>
+      <div class="wx-kicker">{{ header_label }}</div>
+      <div class="wx-place">{{ location_name }}</div>
+    </div>
+    <div class="wx-updated">
+      <div class="wx-updated-label">Updated</div>
+      <div class="wx-updated-time">{{ asof_time }}</div>
+    </div>
+  </header>
+
+  <section class="wx-chart" id="wx-chart-quadrant" data-temps="{{ graph_temps_csv | escape }}" data-now-idx="{{ graph_now_idx }}">
+    <svg class="wx-chart-svg" viewBox="0 0 420 64" preserveAspectRatio="none" aria-hidden="true"></svg>
+  </section>
+
+  <section class="wx-main">
+    <div class="wx-hero">
+      <div class="wx-hero-line">
+        <div class="wx-hero-mark" aria-hidden="true">
+          <img class="{{ hero_icon_classes }}" src="data:image/svg+xml;base64,{{ hero_icon_data }}" alt="">
+        </div>
+        <div class="wx-hero-copy">
+          <div class="wx-reading">
+            <div class="wx-temp">{{ now_temp }}</div>
+            <div class="wx-unit">{{ temp_unit }}</div>
+          </div>
+          <div class="wx-condition">{{ now_cond_label }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="wx-summary">
+      <div class="wx-summary-item">
+        <span class="wx-summary-head">
+          <span class="wx-stat-icon is-feels" aria-hidden="true"></span>
+          <span class="wx-summary-label">Feels</span>
+        </span>
+        <span class="wx-summary-value">{{ now_feels }}{{ temp_unit }}</span>
+      </div>
+      <div class="wx-summary-item">
+        <span class="wx-summary-head">
+          <span class="wx-stat-icon is-rain" aria-hidden="true"></span>
+          <span class="wx-summary-label">Rain</span>
+        </span>
+        <span class="wx-summary-value">{{ pop_now }}%</span>
+      </div>
+      <div class="wx-summary-item">
+        <span class="wx-summary-head">
+          <span class="wx-stat-icon is-humidity" aria-hidden="true"></span>
+          <span class="wx-summary-label">Humidity</span>
+        </span>
+        <span class="wx-summary-value">{{ now_humidity }}%</span>
+      </div>
+      <div class="wx-summary-item">
+        <span class="wx-summary-head">
+          <span class="wx-stat-icon is-wind" aria-hidden="true"></span>
+          <span class="wx-summary-label">Wind</span>
+        </span>
+        <span class="wx-summary-value">{{ now_wind }}{% if wind_unit_display != blank %} {{ wind_unit_display }}{% endif %}</span>
+        </div>
+      </div>
+  </section>
+
+  <section class="wx-forecast">
+    <div class="wx-slots">
+      {% for i in (0..2) %}
+        {% assign hourly_idx = now_index | plus: i %}
+        {% if hourly_idx < hourly_count %}
+          {% assign h_time = hourly_times[hourly_idx] | default: now_time_raw %}
+          {% assign h_label = h_time | date: "%-I %p" %}
+          {% if h_label == blank %}
+            {% assign h_label = h_time | slice: 11, 5 %}
+          {% endif %}
+          {% if i == 0 %}
+            {% assign h_label = 'Now' %}
+          {% endif %}
+          {% assign h_icon = hourly_icons[hourly_idx] | default: '☁' %}
+          {% assign h_temp = hourly_temps[hourly_idx] | default: now_temp | round %}
+          {% if i == 0 %}
+            {% assign h_temp = now_temp %}
+          {% endif %}
+          {% assign h_pop_raw = hourly_pops[hourly_idx] | default: pop_now | round %}
+          {% assign h_pop = h_pop_raw %}
+          {% if h_pop <= 1 %}
+            {% assign h_pop = h_pop | times: 100 | round %}
+          {% endif %}
+          {% if i == 0 %}
+            {% assign h_pop = pop_now %}
+          {% endif %}
+          <article class="wx-slot">
+            <div class="wx-slot-time">{{ h_label }}</div>
+            <div class="wx-slot-main">
+              <div class="wx-slot-icon">{{ h_icon }}</div>
+              <div class="wx-slot-temp">{{ h_temp }}{{ temp_unit }}</div>
+            </div>
+            <div class="wx-slot-rain">Rain {{ h_pop }}%</div>
+          </article>
+        {% endif %}
+      {% endfor %}
+    </div>
+  </section>
+</div>
+
+<script>
+(() => {
+  const chartNode = document.querySelector('#wx-chart-quadrant');
+  if (!chartNode) return;
+
+  const svg = chartNode.querySelector('.wx-chart-svg');
+  if (!svg) return;
+
+  const temps = String(chartNode.dataset.temps || '')
+    .split(',')
+    .map((value) => Number(value.trim()))
+    .filter((value) => Number.isFinite(value));
+  if (!temps.length) return;
+
+  const nowIdxRaw = Number(chartNode.dataset.nowIdx || 0);
+  const nowIndex = Number.isFinite(nowIdxRaw)
+    ? Math.max(0, Math.min(temps.length - 1, Math.round(nowIdxRaw)))
+    : 0;
+
+  const ns = 'http://www.w3.org/2000/svg';
+  const width = 420;
+  const height = 64;
+  const left = 10;
+  const right = 410;
+  const top = 18;
+  const bottom = 46;
+  const centerX = width * 0.5;
+
+  const tempMin = Math.min(...temps);
+  const tempMax = Math.max(...temps);
+  const spread = Math.max(1, tempMax - tempMin);
+  const pad = Math.max(2, Math.ceil(spread * 0.12));
+  const minYTemp = tempMin - pad;
+  const maxYTemp = tempMax + pad;
+  const leftStep = nowIndex > 0 ? (centerX - left) / nowIndex : 0;
+  const rightCount = (temps.length - 1) - nowIndex;
+  const rightStep = rightCount > 0 ? (right - centerX) / rightCount : 0;
+
+  const points = temps.map((temp, index) => {
+    const x = index <= nowIndex
+      ? left + (leftStep * index)
+      : centerX + (rightStep * (index - nowIndex));
+    const y = bottom - ((temp - minYTemp) / (maxYTemp - minYTemp)) * (bottom - top);
+    return { x, y };
+  });
+
+  svg.innerHTML = '';
+
+  const addLine = (x1, y1, x2, y2, cssClass) => {
+    const line = document.createElementNS(ns, 'line');
+    line.setAttribute('x1', String(x1));
+    line.setAttribute('y1', String(y1));
+    line.setAttribute('x2', String(x2));
+    line.setAttribute('y2', String(y2));
+    line.setAttribute('class', cssClass);
+    svg.appendChild(line);
+  };
+
+  const addText = (x, y, cssClass, value) => {
+    const text = document.createElementNS(ns, 'text');
+    text.setAttribute('x', String(x));
+    text.setAttribute('y', String(y));
+    text.setAttribute('class', cssClass);
+    text.setAttribute('text-anchor', 'middle');
+    text.setAttribute('dominant-baseline', 'middle');
+    text.textContent = value;
+    svg.appendChild(text);
+  };
+
+  const path = document.createElementNS(ns, 'path');
+  let d = '';
+  points.forEach((point, index) => {
+    d += `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y} `;
+  });
+  path.setAttribute('d', d.trim());
+  path.setAttribute('class', 'wx-chart-path');
+  svg.appendChild(path);
+
+  points.forEach((point, index) => {
+    const dot = document.createElementNS(ns, 'circle');
+    dot.setAttribute('cx', String(point.x));
+    dot.setAttribute('cy', String(point.y));
+    dot.setAttribute('r', index === nowIndex ? '2.9' : '2');
+    dot.setAttribute('class', `wx-chart-point${index < nowIndex ? ' is-fade' : ''}`);
+    svg.appendChild(dot);
+  });
+
+  let highIdx = 0;
+  let lowIdx = 0;
+  for (let index = 1; index < temps.length; index += 1) {
+    if (temps[index] > temps[highIdx]) highIdx = index;
+    if (temps[index] < temps[lowIdx]) lowIdx = index;
+  }
+
+  const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+  const addExtreme = (x, labelY, title, temp) => {
+    addText(x, labelY, 'wx-chart-label', title);
+    addText(x, labelY + 19, 'wx-chart-value', `${temp}°`);
+  };
+
+  addText(centerX, 13, 'wx-chart-label', 'NOW');
+  const guideY = bottom + 0.5;
+  const stemX = centerX + 0.5;
+  addLine(left, guideY, right, guideY, 'wx-chart-guide');
+  addLine(stemX, 12.5, stemX, guideY, 'wx-chart-now-line');
+
+  const highX = clamp(points[highIdx].x, 46, 374);
+  const highY = clamp(points[highIdx].y - 22, 4, 10);
+  addExtreme(highX, highY, 'H', Math.round(temps[highIdx]));
+
+  const lowX = clamp(points[lowIdx].x, 46, 374);
+  const lowY = clamp(points[lowIdx].y + 9, 28, 30);
+  addExtreme(lowX, lowY, 'L', Math.round(temps[lowIdx]));
+})();
+</script>
+{% endif %}

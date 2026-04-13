@@ -1,0 +1,480 @@
+name: 'Today: Beautiful Weather'
+no_screen_padding: 'no'
+dark_mode: 'no'
+strategy: polling
+static_data: |-
+  {
+      "latitude": 40.44487,
+      "longitude": -111.91464,
+      "generationtime_ms": 0.6948709487915039,
+      "utc_offset_seconds": -21600,
+      "timezone": "America\/Denver",
+      "timezone_abbreviation": "GMT-6",
+      "elevation": 1474,
+      "current_units": {
+          "time": "iso8601",
+          "interval": "seconds",
+          "temperature_2m": "\u00b0F",
+          "apparent_temperature": "\u00b0F",
+          "weather_code": "wmo code",
+          "is_day": "",
+          "relative_humidity_2m": "%",
+          "precipitation": "mm",
+          "wind_speed_10m": "km\/h"
+      },
+      "current": {
+          "time": "2026-04-13T12:15",
+          "interval": 900,
+          "temperature_2m": 51.7,
+          "apparent_temperature": 47.5,
+          "weather_code": 3,
+          "is_day": 1,
+          "relative_humidity_2m": 42,
+          "precipitation": 0,
+          "wind_speed_10m": 12.1
+      },
+      "hourly_units": {
+          "time": "iso8601",
+          "temperature_2m": "\u00b0F",
+          "precipitation_probability": "%",
+          "weather_code": "wmo code",
+          "is_day": "",
+          "rain": "mm",
+          "snowfall": "cm"
+      },
+      "hourly": {
+          "time": [
+              "2026-04-13T00:00",
+              "2026-04-13T01:00",
+              "2026-04-13T02:00",
+              "2026-04-13T03:00",
+              "2026-04-13T04:00",
+              "2026-04-13T05:00",
+              "2026-04-13T06:00",
+              "2026-04-13T07:00",
+              "2026-04-13T08:00",
+              "2026-04-13T09:00",
+              "2026-04-13T10:00",
+              "2026-04-13T11:00",
+              "2026-04-13T12:00",
+              "2026-04-13T13:00",
+              "2026-04-13T14:00",
+              "2026-04-13T15:00",
+              "2026-04-13T16:00",
+              "2026-04-13T17:00",
+              "2026-04-13T18:00",
+              "2026-04-13T19:00",
+              "2026-04-13T20:00",
+              "2026-04-13T21:00",
+              "2026-04-13T22:00",
+              "2026-04-13T23:00",
+              "2026-04-14T00:00",
+              "2026-04-14T01:00",
+              "2026-04-14T02:00",
+              "2026-04-14T03:00",
+              "2026-04-14T04:00",
+              "2026-04-14T05:00",
+              "2026-04-14T06:00",
+              "2026-04-14T07:00",
+              "2026-04-14T08:00",
+              "2026-04-14T09:00",
+              "2026-04-14T10:00",
+              "2026-04-14T11:00",
+              "2026-04-14T12:00",
+              "2026-04-14T13:00",
+              "2026-04-14T14:00",
+              "2026-04-14T15:00",
+              "2026-04-14T16:00",
+              "2026-04-14T17:00",
+              "2026-04-14T18:00",
+              "2026-04-14T19:00",
+              "2026-04-14T20:00",
+              "2026-04-14T21:00",
+              "2026-04-14T22:00",
+              "2026-04-14T23:00"
+          ],
+          "temperature_2m": [
+              39.9,
+              38.5,
+              37.6,
+              38.1,
+              38.5,
+              37.6,
+              36.6,
+              35.6,
+              37.8,
+              40.8,
+              44.3,
+              47.4,
+              50.9,
+              54.4,
+              57.4,
+              53.5,
+              56.4,
+              56.1,
+              55.1,
+              53.4,
+              50.5,
+              48.8,
+              46.1,
+              44.6,
+              42.8,
+              41.7,
+              40.6,
+              39.9,
+              39.5,
+              38.7,
+              38.3,
+              37.2,
+              39.1,
+              42.6,
+              46.2,
+              49.2,
+              51.6,
+              53.6,
+              55,
+              55.8,
+              56.6,
+              56.7,
+              55.7,
+              54.2,
+              50.9,
+              48.1,
+              47.4,
+              45.8
+          ],
+          "precipitation_probability": [
+              49,
+              50,
+              40,
+              27,
+              5,
+              1,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              0,
+              1,
+              2,
+              2,
+              2,
+              2,
+              2,
+              1,
+              1,
+              1,
+              1,
+              0,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              2,
+              2,
+              3,
+              4,
+              2,
+              3,
+              3,
+              3,
+              2,
+              2,
+              2,
+              1
+          ],
+          "weather_code": [
+              53,
+              51,
+              55,
+              3,
+              3,
+              2,
+              1,
+              1,
+              0,
+              0,
+              0,
+              2,
+              3,
+              1,
+              0,
+              3,
+              1,
+              0,
+              0,
+              0,
+              3,
+              3,
+              2,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              0,
+              0,
+              2,
+              0,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+          ],
+          "is_day": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              0,
+              0,
+              0
+          ],
+          "rain": [
+              0.8,
+              0.2,
+              1,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+          ],
+          "snowfall": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+          ]
+      }
+  }
+polling_verb: get
+polling_url: "https://api.open-meteo.com/v1/forecast?latitude={{ latitude | default: '40.7128' }}&longitude={{ longitude | default: '-74.0060' }}&current=temperature_2m,apparent_temperature,weather_code,is_day,relative_humidity_2m,precipitation,wind_speed_10m&hourly=temperature_2m,precipitation_probability,weather_code,is_day,rain,snowfall&temperature_unit={{ temperature_unit | default: 'fahrenheit' | downcase }}&wind_speed_unit={{ wind_speed_unit | default: 'kmh' | downcase }}&precipitation_unit={{ precipitation_unit | default: 'mm' | downcase }}&timezone=auto&forecast_days=2"
+refresh_interval: 60
+id: '270447'
+custom_fields:
+  -
+    keyname: plugin_author
+    name: 'About This Plugin'
+    category: productivity
+    field_type: author_bio
+    email_address: trmnl@truenorth.software
+    description: 'today: beautiful weather surfaces your local weather forecast in a beautiful compact, glanceable grid. powered by the open-meteo API.'
+  -
+    keyname: location_name
+    name: 'Weather Location'
+    field_type: string
+    required: true
+    placeholder: 'New York, NY'
+    help_text: 'Choose a location label shown on the widget header. Could be the city name or a nickname for your favorite weather spot (home, work, beach, ski resort, etc).'
+    default: 'New York, NY'
+  -
+    keyname: latitude
+    name: Latitude
+    field_type: string
+    required: true
+    placeholder: '40.242067851432246'
+    default: '40.242067851432246'
+    help_text: '1-click copy: open <a href="https://maps.google.com">Google Maps</a>, right-click your spot, then click the first coordinates row. Paste the first value here.'
+  -
+    keyname: longitude
+    name: Longitude
+    field_type: string
+    required: true
+    placeholder: '-74.03059810259519'
+    default: '-74.03059810259519'
+    help_text: 'From the same Google Maps coordinates row, paste the second value here.'
+  -
+    keyname: temperature_unit
+    name: 'Temperature Unit'
+    field_type: select
+    required: true
+    options:
+      -
+        Fahrenheit: fahrenheit
+      -
+        Celsius: celsius
+    help_text: 'Choose Celsius or Fahrenheit.'
+    default: fahrenheit
+  -
+    keyname: wind_speed_unit
+    name: 'Wind Speed Unit'
+    field_type: select
+    required: true
+    options:
+      -
+        km/h: kmh
+      -
+        m/s: ms
+      -
+        mph: mph
+      -
+        knots: kn
+    help_text: 'Choose the wind speed unit from Open-Meteo supported options.'
+    default: kmh
+  -
+    keyname: precipitation_unit
+    name: 'Precipitation Unit'
+    field_type: select
+    required: true
+    options:
+      -
+        Millimeter: mm
+      -
+        Inch: inch
+    help_text: 'Choose millimeter or inch for precipitation values.'
+    default: mm
+  -
+    keyname: force_light_mode
+    name: 'Force Light Mode'
+    field_type: boolean
+    default: false
+    category: display
+    help_text: 'Flip to high-contrast light mode for bright environments.'

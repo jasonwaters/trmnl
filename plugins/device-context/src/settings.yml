@@ -1,0 +1,6 @@
+name: 'device context'
+no_screen_padding: 'no'
+dark_mode: 'no'
+strategy: static
+refresh_interval: 60
+id: '123456'

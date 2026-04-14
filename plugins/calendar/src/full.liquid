@@ -1,3 +1,23 @@
+{% assign raw_utc_offset = trmnl.user.utc_offset | plus: 0 %}
+{% assign utc_offset = raw_utc_offset %}
+{% if raw_utc_offset != 0 %}
+  {% assign abs_utc_offset = raw_utc_offset | abs %}
+  {% if abs_utc_offset <= 24 %}
+    {% assign utc_offset = raw_utc_offset | times: 3600 %}
+  {% elsif abs_utc_offset <= 840 %}
+    {% assign utc_offset = raw_utc_offset | times: 60 %}
+  {% endif %}
+{% endif %}
+{% assign effective_utc_offset = utc_offset %}
+{% assign calendar_now_utc_epoch = trmnl.system.timestamp_utc | plus: 0 %}
+{% assign calendar_today_local_epoch = calendar_now_utc_epoch | plus: effective_utc_offset %}
+{% assign calendar_today_local_date = calendar_today_local_epoch | date: "%Y-%m-%d" %}
+{% assign show_calendar_title_setting = trmnl.plugin_settings.custom_fields_values.show_calendar_title | default: "false" %}
+{% assign show_calendar_title = false %}
+{% if show_calendar_title_setting == "true" or show_calendar_title_setting == true %}
+  {% assign show_calendar_title = true %}
+{% endif %}
+
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&display=swap">
 
 <style media="screen">
@@ -199,11 +219,32 @@
 <div class="layout">
   <div id="calendar-full-month-fc"></div>
 </div>
+{% if show_calendar_title %}
+<div class="title_bar">
+  <span class="title">{{ calendar_name | default: "Calendar" }}</span>
+</div>
+{% endif %}
 
 <script src='https://usetrmnl.com/fullcalendar/index.global.min.js'></script>
 
 <script>
   document.addEventListener('DOMContentLoaded', function() {
+    var userLocale = {{ trmnl.user.locale | default: "en-US" | json }};
+    var todayDateKey = '{{ calendar_today_local_date }}';
+
+    function addOneDayToDateKey(dateKey) {
+      if (!dateKey) return dateKey;
+      var parts = String(dateKey).split('-');
+      if (parts.length !== 3) return dateKey;
+      var dateObj = new Date(Date.UTC(
+        parseInt(parts[0], 10),
+        parseInt(parts[1], 10) - 1,
+        parseInt(parts[2], 10)
+      ));
+      dateObj.setUTCDate(dateObj.getUTCDate() + 1);
+      return dateObj.toISOString().slice(0, 10);
+    }
+
     // Configuration: View mode is set via custom field in settings.yml
     // Options: 'oneWeek', 'twoWeek', or 'month'
     var VIEW_MODE = '{{ trmnl.plugin_settings.custom_fields_values.view_mode | default: "twoWeek" }}';
@@ -217,6 +258,8 @@
         end: '{{ event.end }}',
         startDate: '{{ event.start_date }}',
         endDate: '{{ event.end_date }}',
+        startLocal: '{% assign event_start_local_epoch = event.start | date: "%s" | plus: effective_utc_offset %}{{ event_start_local_epoch | date: "%Y-%m-%dT%H:%M:%S" }}',
+        endLocal: '{% assign event_end_local_epoch = event.end | date: "%s" | plus: effective_utc_offset %}{{ event_end_local_epoch | date: "%Y-%m-%dT%H:%M:%S" }}',
         extendedProps: {
           source: '{{ event.source | default: "default" }}'
         }
@@ -257,14 +300,13 @@
         calEvent.allDay = true;
         calEvent.start = event.startDate;
         // FullCalendar all-day events need exclusive end date (day after last day)
-        var endDate = new Date(event.endDate);
-        endDate.setDate(endDate.getDate() + 1);
-        calEvent.end = endDate.toISOString().split('T')[0];
+        calEvent.end = addOneDayToDateKey(event.endDate);
       } else {
         // Single-day timed events
         calEvent.allDay = false;
-        calEvent.start = event.start;
-        calEvent.end = event.end;
+        // Use server-derived local wall-clock values (no timezone suffix) to avoid runtime timezone drift.
+        calEvent.start = event.startLocal;
+        calEvent.end = event.endLocal;
       }
 
       return calEvent;
@@ -306,7 +348,10 @@
 
     var calendar = new FullCalendar.Calendar(calendarEl, {
       initialView: initialView,
-      initialDate: new Date(),
+      initialDate: todayDateKey,
+      // Events are already shifted to local wall-clock values in Liquid.
+      timeZone: 'local',
+      locale: userLocale,
       firstDay: 0,
       headerToolbar: false,
       height: containerHeight,

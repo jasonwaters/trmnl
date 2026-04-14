@@ -1,0 +1,18 @@
+{
+  "name": "@trmnl/device-context",
+  "version": "1.0.0",
+  "description": "device context plugin for TRMNL",
+  "scripts": {
+    "start": "trmnl-dev up",
+    "start:detached": "trmnl-dev up -d",
+    "stop": "trmnl-dev down",
+    "restart": "trmnl-dev restart",
+    "logs": "trmnl-dev logs -f trmnlp",
+    "webhook": "trmnl-dev up webhook-loader",
+    "publish": "trmnl-publish",
+    "publish:prod": "LARAPAPER_URL=https://usetrmnl.com trmnl-publish"
+  },
+  "dependencies": {
+    "@trmnl-tools/core": "*"
+  }
+}

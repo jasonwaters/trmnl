@@ -243,93 +243,48 @@
 
     var eventsData = [
       {% for event in events %}
-      {
+      {% assign start_local_epoch = event.start | date: "%s" | plus: effective_utc_offset %}
+      {% assign end_local_epoch = event.end | date: "%s" | plus: effective_utc_offset %}
+      buildAgendaEvent({
         id: '{{ event.uid }}',
         title: '{{ event.summary }}',
         startEpoch: {{ event.start | date: "%s" | plus: 0 }},
         endEpoch: {{ event.end | date: "%s" | plus: 0 }},
-        start: new Date('{{ event.start }}'),
-        end: new Date('{{ event.end }}'),
         startDateKey: '{{ event.start_date }}',
         endDateKey: '{{ event.end_date }}',
+        startHour: {{ start_local_epoch | date: "%H" | plus: 0 }},
+        startMinute: {{ start_local_epoch | date: "%M" | plus: 0 }},
+        endHour: {{ end_local_epoch | date: "%H" | plus: 0 }},
+        endMinute: {{ end_local_epoch | date: "%M" | plus: 0 }},
+        startLabel12: '{{ start_local_epoch | date: "%-I:%M %p" }}',
+        startLabel24: '{{ start_local_epoch | date: "%H:%M" }}',
+        endLabel12: '{{ end_local_epoch | date: "%-I:%M %p" }}',
+        endLabel24: '{{ end_local_epoch | date: "%H:%M" }}',
         allDay: {{ event.all_day }},
-        source: '{{ event.source | default: "default" }}',
-        color: null,
-        textColor: null
-      }{% unless forloop.last %},{% endunless %}
+        source: '{{ event.source | default: "default" }}'
+      }){% unless forloop.last %},{% endunless %}
       {% endfor %}
     ];
+    applyAgendaSourceColors(eventsData);
 
-    var sources = [...new Set(eventsData.map(e => e.source))];
-    var sourceColors = {};
-    var sourceTextColors = {};
-    
-    var colorPatterns = [
-      ['#000000', '#ffffff'],
-      ['#cccccc', '#000000'],
-      ['#333333', '#ffffff'],
-      ['#e6e6e6', '#000000']
-    ];
-    
-    sources.forEach(function(source, i) {
-      var pattern = colorPatterns[i % colorPatterns.length];
-      sourceColors[source] = pattern[0];
-      sourceTextColors[source] = pattern[1];
-    });
+    var fetchEventsFunc = buildAgendaFetchEvents(
+      eventsData,
+      currentUtcEpoch,
+      '{{ agenda_today_local_date }}'
+    );
 
-    eventsData.forEach(function(event) {
-      event.color = sourceColors[event.source] || '#000000';
-      event.textColor = sourceTextColors[event.source] || '#ffffff';
-    });
-
-    var fetchEventsFunc = function(start, end) {
-      var visibleStartEpoch = getVisibleStartEpoch(eventsData, currentUtcEpoch, '{{ agenda_today_local_date }}');
-      return eventsData.filter(function(e) {
-        return isEventVisibleForAgenda(e, visibleStartEpoch, currentUtcEpoch);
-      });
-    };
-
-    var calendar = new SimpleCalendarJs('#calendar-agenda-quad', {
-      defaultView: 'list',
-      defaultDate: new Date('{{ agenda_today_local_date }}T00:00:00'),
-      weekStartsOn: 0,
-      use24Hour: false,
-      showToolbar: false,
-      showTodayButton: false,
-      showNavigation: false,
-      showViewSwitcher: false,
-      showYearPicker: false,
-      showTooltips: false,
-      showGridLines: false,
-      showBorder: false,
-      enableDragDrop: false,
-      enableResize: false,
-      listDaysForward: 1,
-      fetchEvents: fetchEventsFunc
-    });
-
-    applyTimezoneSafeListView(calendar, {
+    initializeAgendaCalendar({
+      selector: '#calendar-agenda-quad',
+      viewMode: VIEW_MODE,
       todayDateKey: '{{ agenda_today_local_date }}',
       currentUtcEpoch: currentUtcEpoch,
       locale: userLocale,
-      use24Hour: false
+      use24Hour: false,
+      listDaysForward: 1,
+      showGridLines: false,
+      fetchEvents: fetchEventsFunc,
+      eventsData: eventsData
     });
-    if (typeof calendar._renderBody === 'function') {
-      calendar._renderBody();
-    }
-
-    calendar._scrollToBusinessHours = function(vc) {
-      requestAnimationFrame(function() {
-        var body = vc.querySelector('.uc-time-body');
-        if (!body) return;
-        var hourH = parseFloat(
-          getComputedStyle(calendar._root).getPropertyValue('--cal-hour-height')
-        ) || 60;
-        
-        var startHour = calculateDayViewStartHour(eventsData, currentUtcEpoch, '{{ agenda_today_local_date }}');
-        body.scrollTop = startHour * hourH;
-      });
-    };
   });
 </script>
 

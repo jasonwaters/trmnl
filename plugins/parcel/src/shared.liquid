@@ -1,0 +1,233 @@
+<script>
+  const PARCEL_USER_LOCALE = {{ trmnl.user.locale | default: "en-US" | json }};
+  const PARCEL_RAW_UTC_OFFSET = {{ trmnl.user.utc_offset | default: 0 | plus: 0 }};
+  const PARCEL_CURRENT_UTC_EPOCH = {{ trmnl.system.timestamp_utc | plus: 0 }};
+  const PARCEL_FILTER_MODE = "{{ trmnl.plugin_settings.custom_fields_values.filter_mode | default: 'active' }}";
+  const PARCEL_STYLE = "{{ trmnl.plugin_settings.custom_fields_values.style | default: 'detailed' }}";
+  const PARCEL_DAY_COUNTER = "{{ trmnl.plugin_settings.custom_fields_values.day_counter | default: 'days_till_delivery' }}";
+
+  const PARCEL_DELIVERIES = [
+    {% for d in deliveries %}
+      {
+        title: {{ d.description | json }},
+        statusCode: {{ d.status_code }},
+        events: {{ d.events | json }},
+        dateExpected: {{ d.date_expected | json }},
+        dateExpectedEnd: {{ d.date_expected_end | json }}
+      }{% unless forloop.last %},{% endunless %}
+    {% endfor %}
+  ];
+
+  const PARCEL_STATUS_LABELS = {
+    0: 'Delivered',
+    1: 'Frozen',
+    2: 'In Transit',
+    3: 'Pickup Available',
+    4: 'Out for Delivery',
+    5: 'Not Found',
+    6: 'Failed Attempt',
+    7: 'Exception',
+    8: 'Info Received'
+  };
+
+  function parcelNormalizeOffsetSeconds(rawOffset) {
+    const abs = Math.abs(rawOffset);
+    if (abs <= 24) return rawOffset * 3600;
+    if (abs <= 840) return rawOffset * 60;
+    return rawOffset;
+  }
+
+  const PARCEL_EFFECTIVE_UTC_OFFSET_SECONDS = parcelNormalizeOffsetSeconds(PARCEL_RAW_UTC_OFFSET);
+
+  function parcelPad2(value) {
+    return String(value).padStart(2, '0');
+  }
+
+  function parcelToLocalDateKey(epochSeconds) {
+    const shifted = new Date((epochSeconds + PARCEL_EFFECTIVE_UTC_OFFSET_SECONDS) * 1000);
+    return `${shifted.getUTCFullYear()}-${parcelPad2(shifted.getUTCMonth() + 1)}-${parcelPad2(shifted.getUTCDate())}`;
+  }
+
+  function parcelDateKeyToUtcDate(dateKey) {
+    if (!dateKey) return null;
+    const parts = String(dateKey).split('-');
+    if (parts.length !== 3) return null;
+    return new Date(Date.UTC(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10)));
+  }
+
+  function parcelParseInputToEpochSeconds(value) {
+    if (!value) return null;
+    const parsed = Date.parse(value);
+    if (!Number.isNaN(parsed)) return Math.floor(parsed / 1000);
+    const normalized = Date.parse(String(value).replace(' ', 'T'));
+    if (!Number.isNaN(normalized)) return Math.floor(normalized / 1000);
+    return null;
+  }
+
+  function parcelInputToLocalDateKey(value) {
+    const epoch = parcelParseInputToEpochSeconds(value);
+    if (epoch === null) return null;
+    return parcelToLocalDateKey(epoch);
+  }
+
+  function parcelDiffDaysByDateKey(targetDateKey, startDateKey) {
+    const left = parcelDateKeyToUtcDate(targetDateKey);
+    const right = parcelDateKeyToUtcDate(startDateKey);
+    if (!left || !right) return null;
+    return Math.round((left - right) / (1000 * 60 * 60 * 24));
+  }
+
+  const PARCEL_TODAY_DATE_KEY = parcelToLocalDateKey(PARCEL_CURRENT_UTC_EPOCH);
+
+  function parcelFormatDeliveryBy(dateExpected) {
+    const expectedDateKey = parcelInputToLocalDateKey(dateExpected);
+    if (!expectedDateKey) return null;
+
+    const diffDays = parcelDiffDaysByDateKey(expectedDateKey, PARCEL_TODAY_DATE_KEY);
+    if (diffDays === null || diffDays < 0) return null;
+    if (diffDays === 0) return 'Today';
+    if (diffDays === 1) return 'Tomorrow';
+
+    const expectedDate = parcelDateKeyToUtcDate(expectedDateKey);
+    if (!expectedDate) return null;
+    if (diffDays < 7) {
+      return expectedDate.toLocaleDateString(PARCEL_USER_LOCALE, { weekday: 'long', timeZone: 'UTC' });
+    }
+    return expectedDate.toLocaleDateString(PARCEL_USER_LOCALE, { month: 'short', day: 'numeric', timeZone: 'UTC' });
+  }
+
+  function parcelGetDayCount(delivery) {
+    if (PARCEL_DAY_COUNTER === 'none') return null;
+
+    let dayCount = null;
+    if (PARCEL_DAY_COUNTER === 'days_after_postage') {
+      const oldestEvent = delivery.events && delivery.events.length > 0
+        ? delivery.events[delivery.events.length - 1].date
+        : null;
+      dayCount = parcelDiffDaysByDateKey(PARCEL_TODAY_DATE_KEY, parcelInputToLocalDateKey(oldestEvent));
+    } else {
+      dayCount = parcelDiffDaysByDateKey(parcelInputToLocalDateKey(delivery.dateExpected), PARCEL_TODAY_DATE_KEY);
+    }
+
+    if (dayCount === null) return null;
+    if (dayCount < 0) dayCount = 0;
+    return dayCount;
+  }
+
+  function parcelGetDayCountLabel(dayCount) {
+    return dayCount === 1 ? 'Day' : 'Days';
+  }
+
+  function parcelGetEmphasisClass(delivery) {
+    if (delivery.statusCode === 4) return 'item--emphasis-3';
+    if (delivery.statusCode === 0) return 'item--emphasis-1';
+
+    const daysUntil = parcelDiffDaysByDateKey(parcelInputToLocalDateKey(delivery.dateExpected), PARCEL_TODAY_DATE_KEY);
+    if (daysUntil === null) return 'item--emphasis-1';
+    if (daysUntil <= 0) return 'item--emphasis-3';
+    if (daysUntil <= 2) return 'item--emphasis-2';
+    return 'item--emphasis-1';
+  }
+
+  function parcelRenderDelivery(delivery, style) {
+    const statusLabel = PARCEL_STATUS_LABELS[delivery.statusCode] || 'Unknown';
+    const latestEvent = delivery.events && delivery.events.length > 0 ? delivery.events[0].event : null;
+    const deliveryBy = parcelFormatDeliveryBy(delivery.dateExpected);
+    const dayCount = parcelGetDayCount(delivery);
+    const emphasisClass = parcelGetEmphasisClass(delivery);
+
+    if (style === 'compact') {
+      return `
+        <div class="item ${emphasisClass}">
+          <div class="meta"></div>
+          <div class="flex w--full gap--large">
+            ${dayCount !== null ? `
+            <div class="content no-shrink">
+              <span class="value value--small" data-value-fit="true">${dayCount}</span>
+              <span class="label label--small">${parcelGetDayCountLabel(dayCount)}</span>
+            </div>` : ''}
+            <div class="content">
+              <div class="flex flex--row">
+                <span class="title title--small">${delivery.title}</span>
+                <span class="label label--small label--inverted no-shrink">${statusLabel}</span>
+              </div>
+              <div class="description">
+                ${latestEvent ? `<div class="label label--small clamp--2">${latestEvent}</div>` : ''}
+                ${deliveryBy ? `<div class="label label--small clamp--2">Delivery by: ${deliveryBy}</div>` : ''}
+              </div>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    return `
+      <div class="item ${emphasisClass}">
+        <div class="meta"></div>
+        <div class="flex w--full gap--large">
+          ${dayCount !== null ? `
+          <div class="content no-shrink">
+            <span class="value value--base" data-value-fit="true">${dayCount}</span>
+            <span class="label">${parcelGetDayCountLabel(dayCount)}</span>
+          </div>` : ''}
+          <div class="content">
+            <span class="title title--small">${delivery.title}</span>
+            ${latestEvent ? `<div class="label label--small clamp--2">${latestEvent}</div>` : ''}
+            <div class="flex gap--small">
+              <span class="label label--small label--inverted">${statusLabel}</span>
+              ${deliveryBy ? `<span class="label label--small label--underline">Delivery by: ${deliveryBy}</span>` : ''}
+            </div>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  function parcelFilterLabelText(filterMode) {
+    const labels = {
+      all: 'All Deliveries',
+      active: 'Active Deliveries',
+      recent: 'Recent Deliveries',
+      delivered: 'Completed Deliveries'
+    };
+    return labels[filterMode] || 'Deliveries';
+  }
+
+  function parcelTitleBarMarkup(instanceText) {
+    var instance = instanceText || '';
+    return `
+      <div class="title_bar">
+        <img class="image" src="https://usetrmnl.com/images/plugins/parcel--render.png"/>
+        <h1 class="title">Parcel</h1>
+        <span class="instance">${instance}</span>
+      </div>
+    `;
+  }
+
+  function initializeParcelTitleBar(options) {
+    var settings = options || {};
+    var titleBarElement = document.getElementById(settings.targetId || 'parcel-title-bar');
+    if (!titleBarElement) return;
+    titleBarElement.outerHTML = parcelTitleBarMarkup(settings.instanceText || '');
+  }
+
+  function initializeParcelTemplate(options) {
+    const settings = options || {};
+    const style = settings.style || PARCEL_STYLE;
+    const container = document.getElementById(settings.containerId || 'deliveries-container');
+
+    if (settings.showSummary) {
+      const outForDelivery = PARCEL_DELIVERIES.filter(function(delivery) {
+        return delivery.statusCode === 4;
+      }).length;
+      const outForDeliveryElement = document.getElementById(settings.outForDeliveryId || 'out-for-delivery-count');
+      if (outForDeliveryElement) outForDeliveryElement.textContent = outForDelivery;
+
+      const filterLabelElement = document.getElementById(settings.filterLabelId || 'filter-label');
+      if (filterLabelElement) filterLabelElement.textContent = parcelFilterLabelText(PARCEL_FILTER_MODE);
+    }
+
+    if (!container || PARCEL_DELIVERIES.length === 0) return;
+    container.innerHTML = PARCEL_DELIVERIES.map(function(delivery) {
+      return parcelRenderDelivery(delivery, style);
+    }).join('');
+  }
+</script>

@@ -1,0 +1,17 @@
+<div class="layout layout--col h--full">
+  <div id="health-chart" class="w--full h--full"></div>
+</div>
+
+<div class="title_bar">
+  <span class="title" id="chart-title">{{ profileName | capitalize }}'s Trend</span>
+  <span class="instance">Last {{ measurements.size }} Measurements</span>
+</div>
+
+<script type="text/javascript">
+  initializeHealthChart({
+    chartElementId: 'health-chart',
+    chartTitleId: 'chart-title',
+    axisFontSize: '14px',
+    lineWidth: 3
+  });
+</script>

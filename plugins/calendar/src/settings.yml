@@ -25,5 +25,13 @@ custom_fields:
   - One Week: oneWeek
   - Two Weeks: twoWeek
   - Full Month: month
+- keyname: show_calendar_title
+  field_type: select
+  name: Show calendar title
+  description: Display the calendar name from the webhook payload.
+  default: 'false'
+  options:
+  - 'On': 'true'
+  - 'Off': 'false'
 name: Calendar - FullCalendar
 refresh_interval: 1440

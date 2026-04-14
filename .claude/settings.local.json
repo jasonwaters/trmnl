@@ -1,0 +1,32 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:github.com)",
+      "Bash(ruby --version)",
+      "Bash(gem --version)",
+      "Bash(docker --version)",
+      "Bash(brew --version)",
+      "Bash(brew list:*)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:api.github.com)",
+      "WebFetch(domain:help.trmnl.com)",
+      "Bash(export PATH=\"/opt/homebrew/opt/ruby/bin:/opt/homebrew/lib/ruby/gems/4.0.0/bin:$PATH\")",
+      "Bash(trmnlp version:*)",
+      "Bash(trmnlp --help)",
+      "Bash(gem search:*)",
+      "Bash(gem update:*)",
+      "Bash(gem install:*)",
+      "Bash(gem uninstall:*)",
+      "Bash(gem list:*)",
+      "Bash(brew search:*)",
+      "Bash(curl -s https://api.github.com/repos/usetrmnl/plugins/contents/lib/calendar)",
+      "Bash(curl -s https://api.github.com/repos/usetrmnl/plugins/contents/lib/hacker_news)",
+      "Bash(curl -s https://api.github.com/repos/usetrmnl/plugins/contents/lib)",
+      "Bash(curl -s https://api.github.com/repos/usetrmnl/plugins/contents/lib/calendar/views)",
+      "Bash(curl -s https://api.github.com/repos/usetrmnl/plugins/contents/lib/hacker_news/views)",
+      "Bash(curl -s https://api.github.com/repos/usetrmnl/plugins/contents/lib/weather/views)",
+      "Bash(curl:*)",
+      "WebSearch"
+    ]
+  }
+}

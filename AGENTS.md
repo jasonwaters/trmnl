@@ -41,6 +41,9 @@ Plugin directory:
 - Do not double-convert time values (for example Liquid conversion plus JS `toLocaleTimeString` on the same field).
 - If JavaScript time formatting is required, always pass `timeZone: "{{ trmnl.user.time_zone_iana }}"` and `locale: "{{ trmnl.user.locale }}"`.
 - Treat date-only values (`YYYY-MM-DD`) separately from datetime values to avoid unintended day shifts for users behind UTC.
+- Keep `APP_TIMEZONE` (application/server timezone) at `UTC`; do not set it to user-specific timezones.
+- For JS-rendered calendars, prefer server-anchored local wall-clock dates and precomputed Liquid labels over runtime `Date`/`Intl` formatting when possible.
+- When troubleshooting image-vs-browser mismatches, compare Liquid timezone context (`trmnl.user.time_zone_iana` / `utc_offset`) against JS runtime (`Intl.DateTimeFormat().resolvedOptions().timeZone` / `getTimezoneOffset()`).
 
 Known-good Liquid patterns:
 - Local epoch conversion from ISO datetime:
@@ -68,6 +71,17 @@ Known-good Liquid patterns:
 - Do not introduce custom CSS unless every framework-native option has been exhausted.
 - Custom CSS is allowed only with explicit approval or direct instruction from the prompt author.
 - If custom CSS appears necessary, ask for permission before adding it and document why framework conventions were insufficient.
+- Prefer TRMNL utility naming exactly (for example `w--full` / `h--full`), not lookalike utility names like `w-full`.
+- Avoid adding top-level `.view view--*` wrappers unless the specific plugin already requires them; prefer starting templates at `.layout`.
+
+## Shared Template Reuse Rules
+
+- Put reusable Liquid/JS logic in `plugins/<plugin>/src/shared.liquid` and keep layout files thin.
+- Keep layout templates focused on structure and layout-specific options only (for example sizing, column count, minor label differences).
+- When multiple layouts share JS rendering, use one initializer function in `shared.liquid` with optional config arguments.
+- Keep shared initializers resilient to missing DOM nodes (check element existence before writing text/content).
+- Reuse stable element IDs across layouts when possible to minimize per-layout branching in shared code.
+- If a layout intentionally omits a UI block (for example summary stats), pass config flags to shared initializers instead of forking logic.
 
 ## Documentation and Scope
 

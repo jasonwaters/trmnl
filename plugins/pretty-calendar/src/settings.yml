@@ -73,3 +73,14 @@ custom_fields:
         'On': 'true'
       -
         'Off': 'false'
+  -
+    keyname: infer_timezone_offset
+    field_type: select
+    name: 'Infer timezone when offset missing'
+    description: 'Use event-date heuristic only when utc_offset is missing/0. Keep Off unless you explicitly need this fallback.'
+    default: 'false'
+    options:
+      -
+        'Off (recommended)': 'false'
+      -
+        'On (fallback heuristic)': 'true'

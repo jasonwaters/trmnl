@@ -1,13 +1,9 @@
+# TRMNLP configuration
+---
 watch:
   - .trmnlp.yml
   - src
-
-custom_fields:
-  filter_mode: active
-  style: detailed
-  sort_by: estimated_delivery_date
-  day_counter: days_till_delivery
-
+custom_fields: {}
 variables:
   trmnl:
     user:

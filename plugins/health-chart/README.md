@@ -8,6 +8,7 @@ Track your health metrics with beautiful charts optimized for e-ink displays.
 - **Trend visualization** - See your progress over time with Highcharts
 - **E-ink optimized** - Grayscale rendering with clear, readable fonts
 - **Webhook-based updates** - Receives JSON data via POST
+- **4 layout sizes** - full, half_horizontal, half_vertical, and quadrant
 
 ## Configuration
 
@@ -158,7 +159,11 @@ health-chart/
 │   └── data.json         # Your test data (git-ignored)
 └── src/
     ├── settings.yml      # Plugin metadata
-    └── full.liquid       # Full screen chart view
+    ├── shared.liquid     # Shared chart logic/helpers
+    ├── full.liquid       # Full screen chart view
+    ├── half_horizontal.liquid
+    ├── half_vertical.liquid
+    └── quadrant.liquid
 ```
 
 ## License

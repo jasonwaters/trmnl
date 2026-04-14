@@ -1,149 +1,53 @@
-<div class="view view--full">
-  <div class="layout layout--col layout--top">
-
-    <div class="flex w-full">
-      <div class="item">
-        <div class="meta"></div>
-        <div class="content">
-          <span class="value value--large" id="delivery-count">{{ deliveries | size }}</span>
-          <span class="label" id="filter-label">Deliveries</span>
-        </div>
-      </div>
-      <div class="item">
-        <div class="meta"></div>
-        <div class="content">
-          <span class="value value--large" id="out-for-delivery-count">0</span>
-          <span class="label">Out for Delivery</span>
-        </div>
+<div class="layout layout--col layout--top w--full h--full">
+  <div class="flex w--full">
+    <div class="item">
+      <div class="meta"></div>
+      <div class="content">
+        <span class="value value--large" id="delivery-count">{{ deliveries | size }}</span>
+        <span class="label" id="filter-label">Deliveries</span>
       </div>
     </div>
-
-    <div class="border--h-3 w-full my--2"></div>
-
-    <div class="columns">
-      <div
-        class="column"
-        id="deliveries-container"
-        data-list-limit="true"
-        data-list-hidden-count="false"
-        data-list-max-columns="3"
-        data-list-max-height="270"
-      >
-        {% if error %}
-          <div class="flex flex--center-x">
-            <span class="label">{{ error }}</span>
-          </div>
-        {% elsif deliveries.size == 0 %}
-          <div class="flex flex--center-x">
-            <span class="label">No deliveries to show</span>
-          </div>
-        {% endif %}
+    <div class="item">
+      <div class="meta"></div>
+      <div class="content">
+        <span class="value value--large" id="out-for-delivery-count">0</span>
+        <span class="label">Out for Delivery</span>
       </div>
     </div>
-
   </div>
 
-  <div class="title_bar">
-    <img class="image" src="https://usetrmnl.com/images/plugins/parcel--render.png"/>
-    <h1 class="title">Parcel</h1>
-    <span class="instance" id="instance-name"></span>
+  <div class="border--h-3 w--full my--2"></div>
+
+  <div class="columns">
+    <div
+      class="column"
+      id="deliveries-container"
+      data-list-limit="true"
+      data-list-hidden-count="false"
+      data-list-max-columns="3"
+      data-list-max-height="270"
+    >
+      {% if error %}
+        <div class="flex flex--center-x">
+          <span class="label">{{ error }}</span>
+        </div>
+      {% elsif deliveries.size == 0 %}
+        <div class="flex flex--center-x">
+          <span class="label">No deliveries to show</span>
+        </div>
+      {% endif %}
+    </div>
   </div>
 </div>
 
+<div id="parcel-title-bar"></div>
+
 <script>
-  const STATUS_LABELS = {
-    0: 'Delivered',
-    1: 'Frozen',
-    2: 'In Transit',
-    3: 'Pickup Available',
-    4: 'Out for Delivery',
-    5: 'Not Found',
-    6: 'Failed Attempt',
-    7: 'Exception',
-    8: 'Info Received'
-  };
-
-  const filterMode = "{{ trmnl.plugin_settings.custom_fields_values.filter_mode | default: 'active' }}";
-  const style = "{{ trmnl.plugin_settings.custom_fields_values.style | default: 'detailed' }}";
-
-  const deliveries = [
-    {% for d in deliveries %}
-      {
-        title: {{ d.description | json }},
-        statusCode: {{ d.status_code }},
-        events: {{ d.events | json }},
-        dateExpected: {{ d.date_expected | json }},
-        dateExpectedEnd: {{ d.date_expected_end | json }}
-      }{% unless forloop.last %},{% endunless %}
-    {% endfor %}
-  ];
-
-  function formatDeliveryBy(dateExpected) {
-    if (!dateExpected) return null;
-
-    try {
-      const expected = new Date(dateExpected);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      expected.setHours(0, 0, 0, 0);
-
-      const diffDays = Math.round((expected - today) / (1000 * 60 * 60 * 24));
-
-      if (diffDays < 0) return null;
-      if (diffDays === 0) return 'Today';
-      if (diffDays === 1) return 'Tomorrow';
-      if (diffDays < 7) return expected.toLocaleDateString('en-US', { weekday: 'long' });
-      return expected.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    } catch {
-      return null;
-    }
-  }
-
-  function renderDelivery(delivery) {
-    const statusLabel = STATUS_LABELS[delivery.statusCode] || 'Unknown';
-    const latestEvent = delivery.events && delivery.events.length > 0 ? delivery.events[0].event : null;
-    const deliveryBy = formatDeliveryBy(delivery.dateExpected);
-
-    if (style === 'compact') {
-      return `
-        <div class="item">
-          <div class="meta"><span class="index"></span></div>
-          <div class="content">
-            <div class="flex flex--row">
-              <span class="title title--small">${delivery.title}</span>
-              <span class="label label--small label--inverted no-shrink">${statusLabel}</span>
-            </div>
-            <div class="description">
-              ${deliveryBy ? `<div class="label label--small clamp--2">Delivery by: ${deliveryBy}</div>` : ''}
-            </div>
-          </div>
-        </div>`;
-    }
-
-    return `
-      <div class="item">
-        <div class="meta"><span class="index"></span></div>
-        <div class="content">
-          <span class="title title--small">${delivery.title}</span>
-          <span class="label label--small label--inverted">${statusLabel}</span>
-          <div class="description">
-            ${latestEvent ? `<div class="label label--small clamp--2">${latestEvent}</div>` : ''}
-            ${deliveryBy ? `<div class="label label--small clamp--2">Delivery by: ${deliveryBy}</div>` : ''}
-          </div>
-        </div>
-      </div>`;
-  }
-
-  (function() {
-    const outForDelivery = deliveries.filter(d => d.statusCode === 4).length;
-    document.getElementById('out-for-delivery-count').textContent = outForDelivery;
-
-    const filterLabel = filterMode === 'active' ? 'Active Deliveries' : 'Recent Deliveries';
-    document.getElementById('filter-label').textContent = filterLabel;
-
-    if (deliveries.length > 0) {
-      const container = document.getElementById('deliveries-container');
-      container.innerHTML = deliveries.map(renderDelivery).join('');
-    }
-  })();
+  initializeParcelTitleBar();
+  initializeParcelTemplate({
+    containerId: 'deliveries-container',
+    showSummary: true,
+    outForDeliveryId: 'out-for-delivery-count',
+    filterLabelId: 'filter-label'
+  });
 </script>

@@ -6,11 +6,13 @@ Based on the [open-source Parcel plugin](https://github.com/usetrmnl/trmnl_plugi
 
 ## Features
 
-- **Active and recent deliveries** with status badges
+- **App-style day counter rail** with large days-to-delivery and delivered checkmark
+- **All, active, recent, or completed filters**
+- **Configurable sorting** (last updated, date added, estimated delivery date, name)
+- **Configurable day counter** (none, days till delivery, days after postage)
 - **Expected delivery dates** with relative labels (Today, Tomorrow, day of week)
 - **Latest tracking events** for each package
 - **Two display styles**: Detailed (with tracking events) or Compact
-- **Configurable filter**: Active deliveries or Recent deliveries
 - **Polling-based** -- TRMNL server fetches data directly from the Parcel API
 - **E-ink optimized** rendering
 
@@ -26,11 +28,16 @@ This is a **polling** plugin. The TRMNL server calls the [Parcel API](https://pa
 The polling URL and headers are configured in `settings.yml`:
 
 ```
-GET https://api.parcel.app/external/deliveries/?filter_mode={{ filter_mode }}
+GET https://api.parcel.app/external/deliveries/?filter_mode={% if filter_mode == "active" %}active{% else %}recent{% endif %}
 Header: api-key: {{ parcel_api_key }}
 ```
 
-The `{{ filter_mode }}` and `{{ parcel_api_key }}` values are interpolated from the plugin's custom fields at runtime.
+The API endpoint only supports `active` and `recent`, so plugin modes are mapped as:
+
+- `active` -> API `active`
+- `recent`, `all`, `delivered` -> API `recent` with client-side filtering
+
+The custom field values are interpolated at runtime.
 
 ### Parcel API
 
@@ -81,8 +88,10 @@ The Parcel API returns:
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `parcel_api_key` | text | - | Your Parcel API key |
-| `filter_mode` | select | `active` | Active or Recent deliveries |
+| `filter_mode` | select | `active` | All, Active, Recent, or Completed deliveries |
 | `style` | select | `detailed` | Detailed (with events) or Compact |
+| `sort_by` | select | `estimated_delivery_date` | Last updated, date added, estimated delivery date, or name |
+| `day_counter` | select | `days_till_delivery` | None, days till delivery, or days after postage |
 
 ## Local Development
 

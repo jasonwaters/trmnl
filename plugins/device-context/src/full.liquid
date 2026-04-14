@@ -1,0 +1,114 @@
+<div class="layout layout--col layout--top p--2">
+  <div class="item">
+    <div class="meta"></div>
+    <div>
+      <span class="label label--small label--underline">friendly_id</span>
+      <span class="title">{{ trmnl.device.friendly_id }}</span>
+    </div>
+  </div>
+
+  <div class="item">
+    <div class="meta"></div>
+    <div>
+      <span class="label label--small label--underline">dimensions</span>
+      <span class="title">{{ trmnl.device.width }} x {{ trmnl.device.height }}</span>
+    </div>
+  </div>
+
+  <div class="item">
+    <div class="meta"></div>
+    <div>
+      <span class="label label--small label--underline">battery / wifi</span>
+      <span class="title">{{ trmnl.device.percent_charged }}% / {{ trmnl.device.wifi_strength }}</span>
+    </div>
+  </div>
+
+  <div class="item">
+    <div class="meta"></div>
+    <div>
+      <span class="label label--small label--underline">user.time_zone_iana (Liquid)</span>
+      <span class="title" id="liquid-timezone">{{ trmnl.user.time_zone_iana }}</span>
+    </div>
+  </div>
+
+  <div class="item">
+    <div class="meta"></div>
+    <div>
+      <span class="label label--small label--underline">user.utc_offset (Liquid seconds)</span>
+      <span class="title" id="liquid-utc-offset">{{ trmnl.user.utc_offset }}</span>
+    </div>
+  </div>
+
+  <div class="item">
+    <div class="meta"></div>
+    <div>
+      <span class="label label--small label--underline">JS Intl timezone</span>
+      <span class="title" id="js-intl-timezone">loading...</span>
+    </div>
+  </div>
+
+  <div class="item">
+    <div class="meta"></div>
+    <div>
+      <span class="label label--small label--underline">JS timezone offset (minutes)</span>
+      <span class="title" id="js-timezone-offset">loading...</span>
+    </div>
+  </div>
+
+  <div class="item">
+    <div class="meta"></div>
+    <div>
+      <span class="label label--small label--underline">timezone consistency</span>
+      <span class="title" id="timezone-consistency-status">checking...</span>
+    </div>
+  </div>
+
+  <div class="item">
+    <div class="meta"></div>
+    <div>
+      <span class="label label--small label--underline">device json</span>
+      <span class="label label--small">{{ trmnl.device | json }}</span>
+    </div>
+  </div>
+</div>
+
+  <div class="title_bar">
+    <span class="title">Device Debug</span>
+    <span class="instance">{{ trmnl.device.friendly_id }}</span>
+  </div>
+
+  <script>
+    (function() {
+      var tzElement = document.getElementById('js-intl-timezone');
+      var offsetElement = document.getElementById('js-timezone-offset');
+      var liquidTzElement = document.getElementById('liquid-timezone');
+      var liquidOffsetElement = document.getElementById('liquid-utc-offset');
+      var statusElement = document.getElementById('timezone-consistency-status');
+      if (!tzElement || !offsetElement || !liquidTzElement || !liquidOffsetElement || !statusElement) return;
+
+      var runtimeTimezone = 'unknown';
+      try {
+        runtimeTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'unknown';
+      } catch (error) {
+        runtimeTimezone = 'error';
+      }
+
+      var runtimeOffsetMinutes = new Date().getTimezoneOffset();
+
+      tzElement.textContent = runtimeTimezone;
+      offsetElement.textContent = String(runtimeOffsetMinutes);
+
+      var liquidTimezone = (liquidTzElement.textContent || '').trim();
+      var liquidOffsetSeconds = parseInt((liquidOffsetElement.textContent || '').trim(), 10);
+      var runtimeOffsetSeconds = -runtimeOffsetMinutes * 60;
+
+      var timezoneMatch = liquidTimezone && runtimeTimezone && liquidTimezone === runtimeTimezone;
+      var offsetMatch = !Number.isNaN(liquidOffsetSeconds) && liquidOffsetSeconds === runtimeOffsetSeconds;
+
+      if (timezoneMatch && offsetMatch) {
+        statusElement.textContent = 'MATCH';
+      } else {
+        statusElement.textContent = 'MISMATCH (Liquid: ' + liquidTimezone + ' / ' + liquidOffsetSeconds + 's, JS: ' + runtimeTimezone + ' / ' + runtimeOffsetSeconds + 's)';
+      }
+    })();
+  </script>

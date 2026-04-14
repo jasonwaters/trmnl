@@ -1,0 +1,158 @@
+<script src="https://usetrmnl.com/js/highcharts/12.3.0/highcharts.js"></script>
+<script src="https://usetrmnl.com/js/chartkick/5.0.1/chartkick.min.js"></script>
+
+<script type="text/javascript">
+  const HEALTH_USER_LOCALE = {{ trmnl.user.locale | default: "en-US" | json }};
+  const HEALTH_USER_TIMEZONE = {{ trmnl.user.time_zone_iana | default: "UTC" | json }};
+  const HEALTH_PROFILE_NAME = {{ profileName | default: "User" | capitalize | json }};
+  const HEALTH_SELECTED_METRIC = "{{ trmnl.plugin_settings.custom_fields_values.metric | default: 'weight_lbs' }}";
+
+  const HEALTH_METRIC_CONFIG = {
+    weight_lbs: { label: 'Weight', unit: 'lbs', decimals: 1 },
+    fat_mass_lbs: { label: 'Fat Mass', unit: 'lbs', decimals: 1 },
+    muscle_mass_lbs: { label: 'Muscle Mass', unit: 'lbs', decimals: 1 },
+    hydration_lbs: { label: 'Hydration', unit: 'lbs', decimals: 1 },
+    bone_mass_lbs: { label: 'Bone Mass', unit: 'lbs', decimals: 2 },
+    fat_ratio_pct: { label: 'Body Fat', unit: '%', decimals: 1 },
+    fat_free_mass_lbs: { label: 'Lean Mass', unit: 'lbs', decimals: 1 },
+    bmi: { label: 'BMI', unit: '', decimals: 2 }
+  };
+
+  const HEALTH_MEASUREMENTS = [
+    {% assign sorted_measurements = measurements | reverse %}
+    {% for measurement in sorted_measurements %}
+      {
+        date: "{{ measurement.date }}",
+        timestamp: {{ measurement.timestamp | default: 'null' }},
+        measures: {
+          weight_lbs: {{ measurement.measures.weight_lbs | default: 'null' }},
+          fat_mass_lbs: {{ measurement.measures.fat_mass_lbs | default: 'null' }},
+          muscle_mass_lbs: {{ measurement.measures.muscle_mass_lbs | default: 'null' }},
+          hydration_lbs: {{ measurement.measures.hydration_lbs | default: 'null' }},
+          bone_mass_lbs: {{ measurement.measures.bone_mass_lbs | default: 'null' }},
+          fat_ratio_pct: {{ measurement.measures.fat_ratio_pct | default: 'null' }},
+          fat_free_mass_lbs: {{ measurement.measures.fat_free_mass_lbs | default: 'null' }},
+          bmi: {{ measurement.measures.bmi | default: 'null' }}
+        }
+      }{% unless forloop.last %},{% endunless %}
+    {% endfor %}
+  ];
+
+  function healthToEpochMs(measurement) {
+    if (Number.isFinite(measurement.timestamp)) {
+      return measurement.timestamp * 1000;
+    }
+    const parsed = Date.parse(measurement.date);
+    if (Number.isNaN(parsed)) return null;
+    return parsed;
+  }
+
+  function healthFormatMeasurementDate(epochMs) {
+    if (!Number.isFinite(epochMs)) return '-';
+    return new Date(epochMs).toLocaleString(HEALTH_USER_LOCALE, {
+      month: 'short',
+      day: 'numeric',
+      timeZone: HEALTH_USER_TIMEZONE
+    });
+  }
+
+  function healthSetText(id, value) {
+    const element = document.getElementById(id);
+    if (element) element.textContent = value;
+  }
+
+  function initializeHealthChart(options) {
+    const settings = options || {};
+    const chartElementId = settings.chartElementId || 'health-chart';
+    const currentValueId = settings.currentValueId || 'current-weight';
+    const deltaValueId = settings.deltaValueId || 'period-delta';
+    const latestDateId = settings.latestDateId || 'last-date';
+    const chartTitleId = settings.chartTitleId || 'chart-title';
+    const axisFontSize = settings.axisFontSize || '16px';
+    const lineWidth = settings.lineWidth || 4;
+
+    const config = HEALTH_METRIC_CONFIG[HEALTH_SELECTED_METRIC] || HEALTH_METRIC_CONFIG.weight_lbs;
+
+    const metricData = HEALTH_MEASUREMENTS
+      .filter(measurement => measurement.measures[HEALTH_SELECTED_METRIC] !== null)
+      .map(measurement => {
+        const epochMs = healthToEpochMs(measurement);
+        return epochMs === null ? null : [epochMs, measurement.measures[HEALTH_SELECTED_METRIC]];
+      })
+      .filter(point => point !== null);
+
+    if (!metricData.length) return;
+
+    const values = metricData.map(point => point[1]);
+    const firstValue = values[0];
+    const currentValue = values[values.length - 1];
+    const delta = currentValue - firstValue;
+    const latestEpochMs = metricData[metricData.length - 1][0];
+
+    const buffer = (Math.max(...values) - Math.min(...values)) * 0.1;
+    const yAxisMin = Math.min(...values) - buffer;
+    const yAxisMax = Math.max(...values) + buffer;
+
+    const formatValue = (value) => `${value.toFixed(config.decimals)}${config.unit ? ' ' + config.unit : ''}`;
+    const formatDelta = (value) => {
+      const absValue = Math.abs(value).toFixed(config.decimals);
+      const unit = config.unit ? ' ' + config.unit : '';
+      if (value < 0) return `↓ ${absValue}${unit}`;
+      if (value > 0) return `↑ ${absValue}${unit}`;
+      return `0${unit}`;
+    };
+
+    healthSetText(currentValueId, formatValue(currentValue));
+    healthSetText(deltaValueId, formatDelta(delta));
+    healthSetText(latestDateId, healthFormatMeasurementDate(latestEpochMs));
+    healthSetText(chartTitleId, `${HEALTH_PROFILE_NAME}'s ${config.label} Trend`);
+
+    new Chartkick.LineChart(
+      chartElementId,
+      metricData,
+      {
+        adapter: 'highcharts',
+        library: {
+          time: { timezone: HEALTH_USER_TIMEZONE },
+          chart: {
+            backgroundColor: '#FFFFFF',
+            animation: false
+          },
+          credits: { enabled: false },
+          legend: { enabled: false },
+          title: { text: null },
+          plotOptions: {
+            series: {
+              animation: false,
+              lineWidth: lineWidth,
+              color: '#000000',
+              marker: { enabled: false }
+            }
+          },
+          yAxis: {
+            min: yAxisMin,
+            max: yAxisMax,
+            gridLineDashStyle: 'dot',
+            gridLineColor: '#000000',
+            title: { text: null },
+            labels: {
+              formatter: function() {
+                return Highcharts.numberFormat(this.value, config.decimals) + (config.unit ? ' ' + config.unit : '');
+              },
+              style: { color: '#000000', fontSize: axisFontSize }
+            }
+          },
+          xAxis: {
+            type: 'datetime',
+            gridLineDashStyle: 'dot',
+            gridLineColor: '#000000',
+            lineWidth: 0,
+            tickWidth: 0,
+            dateTimeLabelFormats: { day: '%b %d' },
+            labels: { style: { color: '#000000', fontSize: axisFontSize } }
+          }
+        }
+      }
+    );
+  }
+</script>

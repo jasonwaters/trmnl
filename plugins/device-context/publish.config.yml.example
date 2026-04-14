@@ -1,0 +1,4 @@
+# Copy to publish.config.yml and customize if needed
+recipes:
+  - name: device context
+    trmnlp_id: '123456'

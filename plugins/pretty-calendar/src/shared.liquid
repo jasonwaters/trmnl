@@ -20,6 +20,7 @@ TRMNL Calendar Plugin - Shared Logic
 {% assign first_day = trmnl.plugin_settings.custom_fields_values.first_day | default: 1 | plus: 0 %}
 {% assign time_format = trmnl.plugin_settings.custom_fields_values.time_format | default: "am/pm" %}
 {% assign show_event_descriptions_setting = trmnl.plugin_settings.custom_fields_values.show_event_descriptions | default: "true" %}
+{% assign infer_timezone_offset_setting = trmnl.plugin_settings.custom_fields_values.infer_timezone_offset | default: "false" %}
 {% assign show_event_descriptions = true %}
 {% if show_event_descriptions_setting == "false" or show_event_descriptions_setting == false %}
   {% assign show_event_descriptions = false %}
@@ -45,8 +46,13 @@ TRMNL Calendar Plugin - Shared Logic
     {% assign utc_offset = raw_utc_offset | times: 60 %}
   {% endif %}
 {% endif %}
+{% assign allow_inferred_offset = false %}
+{% if infer_timezone_offset_setting == "true" or infer_timezone_offset_setting == true %}
+  {% assign allow_inferred_offset = true %}
+{% endif %}
+
 {% assign inferred_offset_seconds = 0 %}
-{% if utc_offset == 0 %}
+{% if utc_offset == 0 and allow_inferred_offset %}
   {% assign best_match_count = -1 %}
   {% assign best_candidate_offset_seconds = 0 %}
 

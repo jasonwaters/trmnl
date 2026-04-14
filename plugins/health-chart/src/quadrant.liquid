@@ -1,5 +1,5 @@
 <div class="layout layout--col h--full">
-  <div class="grid grid--cols-3">
+  <div class="grid grid--cols-1">
     <div class="item">
       <div class="content">
         <span class="value value--tnums" id="current-weight">-</span>
@@ -9,14 +9,15 @@
     <div class="item">
       <div class="content">
         <span class="value value--tnums" id="period-delta">-</span>
-        <span class="label">PERIOD CHANGE</span>
+        <span class="label">CHANGE</span>
       </div>
     </div>
-    <div class="item">
-      <div class="content">
-        <span class="value value--tnums" id="last-date">-</span>
-        <span class="label">LAST MEASUREMENT</span>
-      </div>
+  </div>
+
+  <div class="item">
+    <div class="content">
+      <span class="label" id="last-date">-</span>
+      <span class="label">LAST MEASUREMENT</span>
     </div>
   </div>
 
@@ -25,7 +26,6 @@
 
 <div class="title_bar">
   <span class="title" id="chart-title">{{ profileName | capitalize }}'s Trend</span>
-  <span class="instance">Last {{ measurements.size }} Measurements</span>
 </div>
 
 <script type="text/javascript">
@@ -35,7 +35,7 @@
     deltaValueId: 'period-delta',
     latestDateId: 'last-date',
     chartTitleId: 'chart-title',
-    axisFontSize: '16px',
-    lineWidth: 4
+    axisFontSize: '12px',
+    lineWidth: 2
   });
 </script>

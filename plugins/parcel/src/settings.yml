@@ -6,16 +6,18 @@ static_data: ''
 polling_verb: get
 framework_version: 2.3.7
 serverless_language:
-polling_url: https://api.parcel.app/external/deliveries/?filter_mode={{ filter_mode }}
+polling_url: >-
+  https://api.parcel.app/external/deliveries/?filter_mode={% if filter_mode == "active" %}active{% else %}recent{% endif %}
 polling_headers: 'api-key: {{ parcel_api_key }}'
 polling_body: ''
 custom_fields:
 - keyname: author_bio
   field_type: author_bio
   name: About This Plugin
-  description: Package delivery tracking using the Parcel app. Displays active and recent deliveries with status, expected delivery dates, and latest tracking events.
+  description: Maintained by Jason Waters. Package delivery tracking using the Parcel app. Displays active and recent deliveries with status, expected delivery dates, and latest tracking events.
   category: personal,logistics
   github_url: https://github.com/jasonwaters/trmnl
+  learn_more_url: https://jasonwaters.dev
 - keyname: parcel_api_key
   field_type: text
   name: Parcel API Key
@@ -25,8 +27,10 @@ custom_fields:
   name: Filter Mode
   default: active
   options:
+  - All Deliveries: all
   - Active Deliveries: active
   - Recent Deliveries: recent
+  - Completed Deliveries: delivered
 - keyname: style
   field_type: select
   name: Display Style
@@ -34,5 +38,22 @@ custom_fields:
   options:
   - Detailed: detailed
   - Compact: compact
+- keyname: sort_by
+  field_type: select
+  name: Sort By
+  default: estimated_delivery_date
+  options:
+  - Last Updated: last_updated
+  - Date Added: date_added
+  - Estimated Delivery Date: estimated_delivery_date
+  - Name: name
+- keyname: day_counter
+  field_type: select
+  name: Day Counter
+  default: days_till_delivery
+  options:
+  - None: none
+  - Days Till Delivery: days_till_delivery
+  - Days After Postage: days_after_postage
 name: Parcel Deliveries
 refresh_interval: 30

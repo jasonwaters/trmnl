@@ -1,21 +1,9 @@
 <div class="layout layout--col h--full">
-  <div class="grid grid--cols-3">
+  <div class="grid grid--cols-1">
     <div class="item">
       <div class="content">
         <span class="value value--tnums" id="current-weight">-</span>
         <span class="label">CURRENT</span>
-      </div>
-    </div>
-    <div class="item">
-      <div class="content">
-        <span class="value value--tnums" id="period-delta">-</span>
-        <span class="label">PERIOD CHANGE</span>
-      </div>
-    </div>
-    <div class="item">
-      <div class="content">
-        <span class="value value--tnums" id="last-date">-</span>
-        <span class="label">LAST MEASUREMENT</span>
       </div>
     </div>
   </div>
@@ -32,10 +20,8 @@
   initializeHealthChart({
     chartElementId: 'health-chart',
     currentValueId: 'current-weight',
-    deltaValueId: 'period-delta',
-    latestDateId: 'last-date',
     chartTitleId: 'chart-title',
-    axisFontSize: '16px',
-    lineWidth: 4
+    axisFontSize: '13px',
+    lineWidth: 3
   });
 </script>

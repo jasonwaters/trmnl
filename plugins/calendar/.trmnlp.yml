@@ -8,8 +8,8 @@ watch:
 
 # values of custom fields (defined in src/settings.yml)
 custom_fields:
-  view_mode: oneWeek
-
+  view_mode: month
+  show_calendar_title: 'true'
 # override variables
 variables:
   trmnl:

@@ -50,6 +50,139 @@
     return startHour;
   }
 
+  function createServerAnchoredDate(dateKey, hour, minute) {
+    if (!dateKey) return new Date();
+    var parts = String(dateKey).split('-');
+    if (parts.length !== 3) return new Date();
+    return new Date(
+      parseInt(parts[0], 10),
+      parseInt(parts[1], 10) - 1,
+      parseInt(parts[2], 10),
+      hour || 0,
+      minute || 0,
+      0,
+      0
+    );
+  }
+
+  function buildAgendaEvent(options) {
+    return {
+      id: options.id,
+      title: options.title || 'Untitled event',
+      startEpoch: options.startEpoch,
+      endEpoch: options.endEpoch,
+      start: createServerAnchoredDate(options.startDateKey, options.startHour, options.startMinute),
+      end: createServerAnchoredDate(options.endDateKey, options.endHour, options.endMinute),
+      startLabel12: options.startLabel12 || '',
+      startLabel24: options.startLabel24 || '',
+      endLabel12: options.endLabel12 || '',
+      endLabel24: options.endLabel24 || '',
+      startDateKey: options.startDateKey,
+      endDateKey: options.endDateKey,
+      allDay: !!options.allDay,
+      source: options.source || 'default',
+      color: null,
+      textColor: null
+    };
+  }
+
+  function applyAgendaSourceColors(eventsData) {
+    var sources = Array.from(new Set(eventsData.map(function(event) {
+      return event.source;
+    })));
+
+    var sourceColors = {};
+    var sourceTextColors = {};
+    var colorPatterns = [
+      ['#000000', '#ffffff'],
+      ['#cccccc', '#000000'],
+      ['#333333', '#ffffff'],
+      ['#e6e6e6', '#000000']
+    ];
+
+    sources.forEach(function(source, index) {
+      var pattern = colorPatterns[index % colorPatterns.length];
+      sourceColors[source] = pattern[0];
+      sourceTextColors[source] = pattern[1];
+    });
+
+    eventsData.forEach(function(event) {
+      event.color = sourceColors[event.source] || '#000000';
+      event.textColor = sourceTextColors[event.source] || '#ffffff';
+    });
+  }
+
+  function buildAgendaFetchEvents(eventsData, currentUtcEpoch, todayDateKey) {
+    return function() {
+      var visibleStartEpoch = getVisibleStartEpoch(eventsData, currentUtcEpoch, todayDateKey);
+      return eventsData.filter(function(event) {
+        return isEventVisibleForAgenda(event, visibleStartEpoch, currentUtcEpoch);
+      });
+    };
+  }
+
+  function createAgendaCalendarOptions(options) {
+    var calendarOptions = {
+      defaultView: options.viewMode,
+      defaultDate: new Date(options.todayDateKey + 'T00:00:00'),
+      weekStartsOn: 0,
+      use24Hour: !!options.use24Hour,
+      showToolbar: false,
+      showTodayButton: false,
+      showNavigation: false,
+      showViewSwitcher: false,
+      showYearPicker: false,
+      showTooltips: false,
+      showGridLines: options.showGridLines !== false,
+      showBorder: false,
+      enableDragDrop: false,
+      enableResize: false,
+      fetchEvents: options.fetchEvents
+    };
+
+    if (options.viewMode === 'list' && typeof options.listDaysForward === 'number') {
+      calendarOptions.listDaysForward = options.listDaysForward;
+    }
+
+    return calendarOptions;
+  }
+
+  function initializeAgendaCalendar(options) {
+    var calendarOptions = createAgendaCalendarOptions(options);
+    var calendar = new SimpleCalendarJs(options.selector, calendarOptions);
+
+    if (options.viewMode === 'list') {
+      applyTimezoneSafeListView(calendar, {
+        todayDateKey: options.todayDateKey,
+        currentUtcEpoch: options.currentUtcEpoch,
+        locale: options.locale,
+        use24Hour: !!options.use24Hour
+      });
+      if (typeof calendar._renderBody === 'function') {
+        calendar._renderBody();
+      }
+    }
+
+    calendar._scrollToBusinessHours = function(vc) {
+      requestAnimationFrame(function() {
+        var body = vc.querySelector('.uc-time-body');
+        if (!body) return;
+        var hourH = parseFloat(
+          getComputedStyle(calendar._root).getPropertyValue('--cal-hour-height')
+        ) || 60;
+
+        var startHour = calculateDayViewStartHour(
+          options.eventsData,
+          options.currentUtcEpoch,
+          options.todayDateKey
+        );
+        body.scrollTop = startHour * hourH;
+      });
+    };
+
+    return calendar;
+  }
+
   function getVisibleStartEpoch(eventsData, currentUtcEpoch, todayDateKey) {
     var inFlightToday = eventsData.filter(function(event) {
       if (event.allDay) return false;
@@ -132,6 +265,11 @@
 
     function formatTime(event) {
       if (isAllDayLike(event)) return 'All day';
+      if (use24Hour) {
+        if (event.startLabel24) return event.startLabel24;
+      } else if (event.startLabel12) {
+        return event.startLabel12;
+      }
       return event.start.toLocaleTimeString(locale, {
         hour: 'numeric',
         minute: '2-digit',

@@ -11,8 +11,221 @@
 {% endif %}
 {% assign effective_utc_offset = utc_offset %}
 
-{% assign agenda_now_local_epoch = trmnl.system.timestamp_utc | plus: effective_utc_offset %}
+{% assign agenda_now_utc_epoch = trmnl.system.timestamp_utc %}
+{% assign agenda_now_local_epoch = agenda_now_utc_epoch | plus: effective_utc_offset %}
 {% assign agenda_today_local_date = agenda_now_local_epoch | date: "%Y-%m-%d" %}
 {% assign agenda_today_label = agenda_now_local_epoch | date: "%a, %b %-d" %}
 {% assign agenda_tomorrow_local_epoch = agenda_now_local_epoch | plus: 86400 %}
 {% assign agenda_tomorrow_local_date = agenda_tomorrow_local_epoch | date: "%Y-%m-%d" %}
+
+<script>
+  /**
+   * Shared function to calculate intelligent start hour for day view
+   * @param {Array} eventsData - Array of event objects with startDateKey, endEpoch, and start properties
+   * @param {number} currentUtcEpoch - Current UTC timestamp
+   * @param {string} todayDateKey - Today's date in YYYY-MM-DD format (from server timezone)
+   * @returns {number} Hour (0-23) to scroll to
+   */
+  function calculateDayViewStartHour(eventsData, currentUtcEpoch, todayDateKey) {
+    var startHour = 9; // default fallback
+    
+    // Get today's events that haven't ended yet
+    var todayEvents = eventsData.filter(function(e) {
+      return e.startDateKey === todayDateKey && e.endEpoch > currentUtcEpoch;
+    });
+    
+    if (todayEvents.length > 0) {
+      // Find the earliest event that hasn't ended yet
+      var earliestEvent = todayEvents.reduce(function(earliest, e) {
+        return e.start < earliest.start ? e : earliest;
+      });
+      startHour = earliestEvent.start.getHours();
+    } else {
+      // No events remaining today, show current hour rounded down
+      // Calculate current hour from UTC epoch + offset
+      var localDate = new Date((currentUtcEpoch + ({{ effective_utc_offset }})) * 1000);
+      startHour = localDate.getUTCHours();
+    }
+    
+    return startHour;
+  }
+
+  function getVisibleStartEpoch(eventsData, currentUtcEpoch, todayDateKey) {
+    var inFlightToday = eventsData.filter(function(event) {
+      if (event.allDay) return false;
+      return (
+        event.startDateKey === todayDateKey &&
+        event.startEpoch <= currentUtcEpoch &&
+        event.endEpoch > currentUtcEpoch
+      );
+    });
+
+    if (!inFlightToday.length) {
+      return currentUtcEpoch;
+    }
+
+    return inFlightToday.reduce(function(minStart, event) {
+      return event.startEpoch < minStart ? event.startEpoch : minStart;
+    }, inFlightToday[0].startEpoch);
+  }
+
+  function isEventVisibleForAgenda(event, visibleStartEpoch, currentUtcEpoch) {
+    if (event.allDay) {
+      return event.endEpoch > currentUtcEpoch;
+    }
+
+    if (visibleStartEpoch < currentUtcEpoch) {
+      return event.startEpoch >= visibleStartEpoch;
+    }
+
+    return event.endEpoch > currentUtcEpoch;
+  }
+
+  /**
+   * Overrides SimpleCalendarJS list rendering to use plugin-local date keys.
+   * This avoids browser-timezone drift in list headers while preserving day view behavior.
+   */
+  function applyTimezoneSafeListView(calendar, options) {
+    if (!calendar || typeof calendar._buildListView !== 'function') return;
+
+    var todayDateKey = options.todayDateKey;
+    var currentUtcEpoch = options.currentUtcEpoch;
+    var locale = options.locale || 'en-US';
+    var use24Hour = !!options.use24Hour;
+
+    function pad2(value) {
+      return String(value).padStart(2, '0');
+    }
+
+    function parseDateKey(dateKey) {
+      var parts = String(dateKey || '').split('-');
+      if (parts.length !== 3) return new Date();
+      return new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+    }
+
+    function formatDateKey(dateObj) {
+      return dateObj.getFullYear() + '-' + pad2(dateObj.getMonth() + 1) + '-' + pad2(dateObj.getDate());
+    }
+
+    function addDays(dateKey, days) {
+      var dateObj = parseDateKey(dateKey);
+      dateObj.setDate(dateObj.getDate() + days);
+      return formatDateKey(dateObj);
+    }
+
+    function escapeHtml(value) {
+      return String(value == null ? '' : value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function isAllDayLike(event) {
+      if (event.allDay) return true;
+      if (event.startDateKey && event.endDateKey) {
+        return event.startDateKey !== event.endDateKey;
+      }
+      return false;
+    }
+
+    function formatTime(event) {
+      if (isAllDayLike(event)) return 'All day';
+      return event.start.toLocaleTimeString(locale, {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: !use24Hour
+      });
+    }
+
+    function formatHeader(dateKey) {
+      return new Intl.DateTimeFormat(locale, {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      }).format(parseDateKey(dateKey));
+    }
+
+    function getEventEndEpoch(event) {
+      if (typeof event.endEpoch === 'number') return event.endEpoch;
+      return Math.floor(new Date(event.end).getTime() / 1000);
+    }
+
+    function getEventStartEpoch(event) {
+      if (typeof event.startEpoch === 'number') return event.startEpoch;
+      return Math.floor(new Date(event.start).getTime() / 1000);
+    }
+
+    function getEventStartDateKey(event) {
+      if (event.startDateKey) return event.startDateKey;
+      return formatDateKey(event.start);
+    }
+
+    calendar._buildListView = function() {
+      var listDaysForward = Number(this._opts.listDaysForward || 30);
+      var lastDateKey = addDays(todayDateKey, listDaysForward);
+      var visibleStartEpoch = getVisibleStartEpoch(this._events, currentUtcEpoch, todayDateKey);
+
+      var upcomingEvents = this._events.filter(function(event) {
+        var normalizedEvent = {
+          allDay: !!event.allDay,
+          startEpoch: getEventStartEpoch(event),
+          endEpoch: getEventEndEpoch(event)
+        };
+        return (
+          isEventVisibleForAgenda(normalizedEvent, visibleStartEpoch, currentUtcEpoch) &&
+          getEventStartDateKey(event) <= lastDateKey
+        );
+      });
+
+      upcomingEvents.sort(function(a, b) {
+        var aStartKey = getEventStartDateKey(a);
+        var bStartKey = getEventStartDateKey(b);
+        var aDisplayKey = aStartKey < todayDateKey ? todayDateKey : aStartKey;
+        var bDisplayKey = bStartKey < todayDateKey ? todayDateKey : bStartKey;
+
+        if (aDisplayKey !== bDisplayKey) return aDisplayKey < bDisplayKey ? -1 : 1;
+        return a.start - b.start;
+      });
+
+      if (!upcomingEvents.length) {
+        return '<div class="uc-list-view"><div class="uc-list-empty"><p>No upcoming events</p></div></div>';
+      }
+
+      var grouped = new Map();
+      upcomingEvents.forEach(function(event) {
+        var startKey = getEventStartDateKey(event);
+        var displayKey = startKey < todayDateKey ? todayDateKey : startKey;
+        if (!grouped.has(displayKey)) grouped.set(displayKey, []);
+        grouped.get(displayKey).push(event);
+      });
+
+      var groupsHtml = '';
+      grouped.forEach(function(events, dateKey) {
+        var eventsHtml = events.map(function(event) {
+          var color = event.color || 'var(--cal-event-bg)';
+          return (
+            '<div class="uc-list-event" data-event-id="' + escapeHtml(event.id) + '" data-action="event-click">' +
+              '<div class="uc-list-event-indicator" style="background: ' + escapeHtml(color) + ';"></div>' +
+              '<div class="uc-list-event-time">' + escapeHtml(formatTime(event)) + '</div>' +
+              '<div class="uc-list-event-content">' +
+                '<div class="uc-list-event-title">' + escapeHtml(event.title) + '</div>' +
+              '</div>' +
+            '</div>'
+          );
+        }).join('');
+
+        groupsHtml += (
+          '<div class="uc-list-date-group">' +
+            '<div class="uc-list-date-header">' + escapeHtml(formatHeader(dateKey)) + '</div>' +
+            '<div class="uc-list-events">' + eventsHtml + '</div>' +
+          '</div>'
+        );
+      });
+
+      return '<div class="uc-list-view">' + groupsHtml + '</div>';
+    };
+  }
+</script>

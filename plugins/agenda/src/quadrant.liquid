@@ -1,46 +1,59 @@
 {% assign view_mode = trmnl.plugin_settings.custom_fields_values.view_mode | default: "basic_list" %}
-{% assign today_label = agenda_today_label %}
-{% assign calendar_title = calendar_name | default: "Agenda" %}
 
 {% if view_mode == 'basic_list' %}
 <!-- ============================================================================ -->
-<!-- Basic List Mode - TRMNL Framework Components -->
+<!-- Basic List Mode - TRMNL Framework Components (Quadrant Micro) -->
 <!-- ============================================================================ -->
 
 <style media="screen">
-  .agenda-list {
-    padding: 12px;
+  .agenda-list-quadrant {
+    padding: 4px 6px;
     justify-content: flex-start !important;
     align-items: stretch !important;
   }
 
-  .agenda-item {
-    margin-bottom: 8px;
+  .agenda-item-quadrant {
+    margin-bottom: 3px;
   }
 
-  .agenda-item:last-child {
+  .agenda-item-quadrant:last-child {
     margin-bottom: 0;
   }
 
-  .agenda-item .content {
-    min-width: 0;
+  .agenda-item-quadrant .title--small {
+    font-size: 9px !important;
   }
 
-  .agenda-time {
+  .agenda-item-quadrant .label--small {
+    font-size: 7px !important;
+  }
+
+  .agenda-time-quadrant {
     white-space: nowrap;
+  }
+
+  .agenda-item-quadrant .description {
+    display: none;
+  }
+
+  .agenda-item-quadrant .meta {
+    display: none;
   }
 </style>
 
-<div class="view view--full">
-<div class="layout layout--col layout--top agenda-list">
+{% assign today_label = agenda_today_label %}
+{% assign calendar_title = calendar_name | default: "Agenda" %}
+
+<div class="view view--quadrant">
+<div class="layout layout--col layout--top agenda-list-quadrant">
   {% assign window_start_date = agenda_today_local_date %}
   {% assign window_start_epoch = agenda_now_local_epoch %}
-  {% assign window_end_epoch = window_start_epoch | plus: 604800 %}
+  {% assign window_end_epoch = window_start_epoch | plus: 86400 %}
   {% assign window_end_date = window_end_epoch | date: "%Y-%m-%d" %}
   {% assign last_rendered_date = "" %}
   {% assign displayed_count = 0 %}
   {% assign sources = events | map: "source" | uniq %}
-
+  
   {% for event in events %}
         {% if event.start_date > window_end_date %}
           {% break %}
@@ -65,9 +78,12 @@
             {% assign display_date = window_start_date %}
           {% endif %}
           {% assign displayed_count = displayed_count | plus: 1 %}
+          {% if displayed_count > 3 %}
+            {% break %}
+          {% endif %}
           {% if display_date != last_rendered_date %}
             {% assign last_rendered_date = display_date %}
-            <span class="label label--small label--underline">{{ display_date | date: "%A, %B %-d, %Y" }}</span>
+            <span class="label label--small label--underline">{{ display_date | date: "%a, %b %-d" }}</span>
           {% endif %}
         {% else %}
           {% continue %}
@@ -79,47 +95,35 @@
             {% break %}
           {% endif %}
         {% endfor %}
+        
         {% assign emphasis_level = source_index | modulo: 3 | plus: 1 %}
-
-        <div class="item agenda-item item--emphasis-{{ emphasis_level }}">
+        
+        <div class="item agenda-item-quadrant item--emphasis-{{ emphasis_level }}">
           <div class="meta"></div>
           <div class="content">
             <span class="title title--small">{{ event.summary | default: "Untitled event" }}</span>
-            {% if event.description and event.description != "" %}
-              <span class="description" data-clamp="2">{{ event.description }}</span>
-            {% endif %}
-
             <div class="flex gap--small">
               {% if event.all_day %}
                 <span class="label label--small label--underline">All Day</span>
               {% else %}
                 {% assign start_local_epoch = event.start | date: "%s" | plus: effective_utc_offset %}
-                {% assign end_local_epoch = event.end | date: "%s" | plus: effective_utc_offset %}
                 {% assign display_start = start_local_epoch | date: "%-I:%M %p" %}
-                {% assign display_end = end_local_epoch | date: "%-I:%M %p" %}
                 <span
-                  class="label label--small label--underline agenda-time"
+                  class="label label--small label--underline agenda-time-quadrant"
                 >
-                  {{ display_start }} - {{ display_end }}
+                  {{ display_start }}
                 </span>
-              {% endif %}
-
-              <span class="label label--small label--underline">{{ display_date | date: "%a %b %-d" }}</span>
-
-              {% if event.source %}
-                <span class="label label--small label--underline">{{ event.source }}</span>
               {% endif %}
             </div>
           </div>
         </div>
   {% endfor %}
-
+  
   {% if displayed_count == 0 %}
-    <div class="item agenda-item">
+    <div class="item agenda-item-quadrant">
       <div class="meta"></div>
       <div class="content">
-        <span class="title title--small">No events in the next 7 days</span>
-        <span class="description">Your schedule is clear.</span>
+        <span class="title title--small">No events today</span>
       </div>
     </div>
   {% endif %}
@@ -132,7 +136,7 @@
 
 {% else %}
 <!-- ============================================================================ -->
-<!-- Day / List Mode - SimpleCalendarJS -->
+<!-- List Mode Only - SimpleCalendarJS (Quadrant Micro) -->
 <!-- ============================================================================ -->
 
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&display=swap">
@@ -148,152 +152,95 @@
     overflow: hidden;
   }
 
-  #calendar-agenda {
-    height: 100%;
+  #calendar-agenda-quad {
+    height: 100vh;
     width: 100%;
     max-width: 100%;
     overflow: hidden;
   }
 
-  #calendar-agenda * {
+  #calendar-agenda-quad * {
     font-family: 'Roboto Condensed', sans-serif !important;
-    font-size: 12px;
-    line-height: 1.3;
+    font-size: 9px;
+    line-height: 1.1;
   }
 
-  /* Day view - e-ink styling */
-  #calendar-agenda .sc-event {
-    border-radius: 0 !important;
-    overflow: visible !important;
-    padding: 2px 4px !important;
-  }
-
-  #calendar-agenda .sc-event-title {
-    display: block !important;
-    font-size: 11px !important;
-    line-height: 1.2 !important;
-    overflow: visible !important;
-  }
-
-  #calendar-agenda .sc-event-time {
-    font-size: 10px !important;
-  }
-
-  /* List view - e-ink styling */
-  #calendar-agenda .sc-list-event {
-    border-left: 4px solid black;
-    padding: 8px;
-    margin-bottom: 4px;
+  /* List view - micro */
+  #calendar-agenda-quad .sc-list-event {
+    border-left: 2px solid black;
+    padding: 3px;
+    margin-bottom: 2px;
     background-color: white;
   }
 
-  #calendar-agenda .sc-list-event-title {
+  #calendar-agenda-quad .sc-list-event-title {
     font-weight: 700;
-    margin-bottom: 4px;
+    margin-bottom: 1px;
+    font-size: 9px;
   }
 
-  #calendar-agenda .sc-list-event-time {
-    font-size: 11px;
+  #calendar-agenda-quad .sc-list-event-time {
+    font-size: 8px;
     opacity: 0.8;
   }
 
-  #calendar-agenda .sc-list-date-header {
+  #calendar-agenda-quad .sc-list-date-header {
     font-weight: 700;
-    font-size: 14px;
+    font-size: 10px;
     text-transform: uppercase;
-    margin: 12px 0 8px 0;
-    padding-bottom: 4px;
-    border-bottom: 2px solid black;
-  }
-
-  /* Time slots */
-  #calendar-agenda .sc-time-slot {
-    border: 1px dashed rgba(0, 0, 0, 0.2) !important;
-  }
-
-  /* Current time indicator */
-  #calendar-agenda .sc-current-time {
-    border-top: 2px solid black !important;
-  }
-
-  /* Day header */
-  #calendar-agenda .sc-header-cell {
-    font-family: 'Roboto Condensed', sans-serif !important;
-    font-size: 14px;
-    font-weight: 700;
-    text-transform: uppercase;
-  }
-
-  /* Time column */
-  #calendar-agenda .sc-time-col {
-    font-size: 11px;
-    font-weight: 700;
-  }
-
-  /* Hide toolbar */
-  #calendar-agenda .sc-toolbar {
-    display: none !important;
+    margin: 4px 0 3px 0;
+    padding-bottom: 2px;
+    border-bottom: 1px solid black;
   }
 
   /* Hide current time indicator */
-  #calendar-agenda .uc-now-indicator,
-  #calendar-agenda .uc-now-dot,
-  #calendar-agenda .uc-now-line {
+  #calendar-agenda-quad .uc-now-indicator,
+  #calendar-agenda-quad .uc-now-dot,
+  #calendar-agenda-quad .uc-now-line {
     display: none !important;
   }
 
   /* Remove scrollbars */
-  #calendar-agenda .sc-scroller,
-  #calendar-agenda .sc-body,
-  #calendar-agenda .sc-list-view,
-  #calendar-agenda .sc-list-container {
+  #calendar-agenda-quad .sc-scroller,
+  #calendar-agenda-quad .sc-body,
+  #calendar-agenda-quad .sc-list-view,
+  #calendar-agenda-quad .sc-list-container {
     overflow: hidden !important;
   }
 
   /* Hide scrollbar styles */
-  #calendar-agenda *::-webkit-scrollbar {
+  #calendar-agenda-quad *::-webkit-scrollbar {
     display: none;
   }
 
-  #calendar-agenda * {
+  #calendar-agenda-quad * {
     scrollbar-width: none;
   }
 
-  /* Force day view to fill height */
-  #calendar-agenda .sc-day-view,
-  #calendar-agenda .sc-list-view,
-  #calendar-agenda .sc-view-container,
-  #calendar-agenda .sc-container {
+  /* Force list view to fill height */
+  #calendar-agenda-quad .sc-list-view,
+  #calendar-agenda-quad .sc-view-container,
+  #calendar-agenda-quad .sc-container {
     height: 100% !important;
     max-height: none !important;
     min-height: 100vh !important;
   }
 
   /* Allow overflow on time columns so overlapping events can render side-by-side */
-  #calendar-agenda .sc-time-col {
+  #calendar-agenda-quad .sc-time-col {
     overflow: visible !important;
     position: relative !important;
   }
 </style>
 
-<div class="view view--full">
-  <div class="layout layout--col layout--top">
-    <div id="calendar-agenda"></div>
-  </div>
-  {% if view_mode == 'list' %}
-  <div class="title_bar">
-    <span class="title">{{ calendar_title }}</span>
-    <span class="instance">{{ today_label }}</span>
-  </div>
-  {% endif %}
-</div>
+<div id="calendar-agenda-quad"></div>
 
 <script>
   document.addEventListener('DOMContentLoaded', function() {
-    var VIEW_MODE = '{{ view_mode }}';
+    var VIEW_MODE = 'list';
     var userLocale = {{ trmnl.user.locale | default: "en-US" | json }};
     var currentUtcEpoch = {{ agenda_now_utc_epoch }};
-    
+
     var eventsData = [
       {% for event in events %}
       {
@@ -316,14 +263,14 @@
     var sources = [...new Set(eventsData.map(e => e.source))];
     var sourceColors = {};
     var sourceTextColors = {};
-
+    
     var colorPatterns = [
       ['#000000', '#ffffff'],
       ['#cccccc', '#000000'],
       ['#333333', '#ffffff'],
       ['#e6e6e6', '#000000']
     ];
-
+    
     sources.forEach(function(source, i) {
       var pattern = colorPatterns[i % colorPatterns.length];
       sourceColors[source] = pattern[0];
@@ -342,8 +289,8 @@
       });
     };
 
-    var calendarOptions = {
-      defaultView: VIEW_MODE,
+    var calendar = new SimpleCalendarJs('#calendar-agenda-quad', {
+      defaultView: 'list',
       defaultDate: new Date('{{ agenda_today_local_date }}T00:00:00'),
       weekStartsOn: 0,
       use24Hour: false,
@@ -353,29 +300,22 @@
       showViewSwitcher: false,
       showYearPicker: false,
       showTooltips: false,
-      showGridLines: true,
+      showGridLines: false,
       showBorder: false,
       enableDragDrop: false,
       enableResize: false,
+      listDaysForward: 1,
       fetchEvents: fetchEventsFunc
-    };
+    });
 
-    if (VIEW_MODE === 'list') {
-      calendarOptions.listDaysForward = 7;
-    }
-
-    var calendar = new SimpleCalendarJs('#calendar-agenda', calendarOptions);
-
-    if (VIEW_MODE === 'list') {
-      applyTimezoneSafeListView(calendar, {
-        todayDateKey: '{{ agenda_today_local_date }}',
-        currentUtcEpoch: currentUtcEpoch,
-        locale: userLocale,
-        use24Hour: false
-      });
-      if (typeof calendar._renderBody === 'function') {
-        calendar._renderBody();
-      }
+    applyTimezoneSafeListView(calendar, {
+      todayDateKey: '{{ agenda_today_local_date }}',
+      currentUtcEpoch: currentUtcEpoch,
+      locale: userLocale,
+      use24Hour: false
+    });
+    if (typeof calendar._renderBody === 'function') {
+      calendar._renderBody();
     }
 
     calendar._scrollToBusinessHours = function(vc) {

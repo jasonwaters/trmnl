@@ -7,8 +7,9 @@ Daily schedule plugin for TRMNL e-ink displays with three view modes: day grid, 
 - **Three view modes** - Choose between SimpleCalendarJS day/list views or framework-native basic list
 - **Multiple event sources** with color coding for e-ink
 - **Webhook-based updates** - receives JSON via POST
-- **2 layouts** - full (800x480) and half_vertical (800x240)
+- **4 layouts** - full (800x480), half_vertical (800x240), half_horizontal (800x240), and quadrant (400x240)
 - **E-ink optimized** - grayscale rendering, readable fonts, no animations
+- **Smart filtering** - automatically hides events that have already ended
 
 ## View Modes
 
@@ -18,17 +19,20 @@ Pure TRMNL framework implementation using [Item components](https://trmnl.com/fr
 - Title, description (clamped), time range, source, and location labels
 - Zero JavaScript libraries - lightest weight, most e-ink native
 - Best for: Simple daily schedule display
+- Shows: Next 7 days (full) / 3 days (half layouts) / today only (quadrant)
+- Displays: All events (full) / 6 events max (half_vertical) / 4 events max (half_horizontal) / 3 events max (quadrant)
 
 ### Day
 SimpleCalendarJS day view showing today's schedule as a time grid with hour slots. Events positioned by time with visual duration.
 - Best for: Seeing the shape of your day at a glance
 - Shows: Today only, 7am-8pm
+- Available on: full, half_vertical, half_horizontal layouts
 
 ### List
 SimpleCalendarJS list view showing upcoming events grouped by date headers.
 - Best for: Upcoming events over multiple days
-- Shows: Next 7 days (full) / 3 days (half_vertical)
-- Displays: 15 events max (full) / 6 events max (half_vertical)
+- Shows: Next 7 days (full) / 3 days (half layouts) / 1 day (quadrant)
+- Displays: 15 events max (full) / 6 events max (half_vertical) / 4 events max (half_horizontal) / 3 events max (quadrant)
 
 ## Event Sources
 
@@ -71,6 +75,8 @@ npm run webhook      # Manually reload webhook data
 
 - `/full` - Full screen (800x480)
 - `/half_vertical` - Half screen vertical (800x240)
+- `/half_horizontal` - Half screen horizontal (800x240)
+- `/quadrant` - Quadrant (400x240)
 
 Add `?png=1` to any URL to render as PNG instead of HTML.
 
@@ -207,8 +213,11 @@ agenda/
 │   └── data.json         # Test data for local dev
 └── src/
     ├── settings.yml      # Plugin metadata (id auto-injected on publish)
+    ├── shared.liquid     # Shared timezone/date context
     ├── full.liquid       # Full screen (800x480)
-    └── half_vertical.liquid  # Half screen vertical (800x240)
+    ├── half_vertical.liquid  # Half screen vertical (800x240)
+    ├── half_horizontal.liquid  # Half screen horizontal (800x240)
+    └── quadrant.liquid   # Quadrant (400x240)
 ```
 
 ## Configuration Options
@@ -219,6 +228,8 @@ Select from three rendering modes:
 - **Basic List** - Framework-native Item components (default)
 - **Day** - SimpleCalendarJS day view with time grid
 - **List** - SimpleCalendarJS upcoming events list
+
+All three modes properly filter events to show only those that haven't ended yet.
 
 ## Related Projects
 

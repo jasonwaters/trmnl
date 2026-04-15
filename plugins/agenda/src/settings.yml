@@ -25,5 +25,18 @@ custom_fields:
   - List: list
   - Basic List: basic_list
   - Day: day
+- keyname: show_event_descriptions
+  field_type: boolean
+  name: Show Event Descriptions
+  default: true
+  help_text: Show or hide event descriptions in Basic List view.
+- keyname: text_density
+  field_type: select
+  name: Text Density
+  default: comfortable
+  options:
+  - Comfortable: comfortable
+  - Compact: compact
+  help_text: Controls typography density in Basic List view.
 name: Agenda
 refresh_interval: 1440

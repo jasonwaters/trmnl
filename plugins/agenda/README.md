@@ -231,6 +231,18 @@ Select from three rendering modes:
 
 All three modes properly filter events to show only those that haven't ended yet.
 
+### Text Density (Basic List)
+
+Controls typography density for Basic List mode:
+- **Comfortable** - Larger `title` and `label` framework classes for improved readability
+- **Compact** - Uses `title--small` and `label--small` for tighter layouts
+
+This setting applies across full, half, and quadrant Basic List templates.
+
+### Show Event Descriptions (Basic List)
+
+Toggle event descriptions on or off in Basic List mode.
+
 ## Related Projects
 
 - **calendar-webhook** - Node.js script for fetching ICS calendars and POSTing to webhooks

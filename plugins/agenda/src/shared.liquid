@@ -17,6 +17,22 @@
 {% assign agenda_today_label = agenda_now_local_epoch | date: "%a, %b %-d" %}
 {% assign agenda_tomorrow_local_epoch = agenda_now_local_epoch | plus: 86400 %}
 {% assign agenda_tomorrow_local_date = agenda_tomorrow_local_epoch | date: "%Y-%m-%d" %}
+{% assign show_event_descriptions_raw = trmnl.plugin_settings.custom_fields_values.show_event_descriptions | default: true | append: '' | downcase %}
+{% assign show_event_descriptions = true %}
+{% if show_event_descriptions_raw == 'false' or show_event_descriptions_raw == '0' or show_event_descriptions_raw == 'no' or show_event_descriptions_raw == 'off' %}
+  {% assign show_event_descriptions = false %}
+{% endif %}
+{% assign text_density_raw = trmnl.plugin_settings.custom_fields_values.text_density | default: 'comfortable' | append: '' | downcase %}
+{% assign text_density = 'comfortable' %}
+{% if text_density_raw == 'compact' %}
+  {% assign text_density = 'compact' %}
+{% endif %}
+{% assign agenda_title_class = 'title' %}
+{% assign agenda_label_class = 'label label--underline' %}
+{% if text_density == 'compact' %}
+  {% assign agenda_title_class = 'title title--small' %}
+  {% assign agenda_label_class = 'label label--small label--underline' %}
+{% endif %}
 
 <script>
   /**

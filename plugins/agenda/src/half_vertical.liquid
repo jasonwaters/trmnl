@@ -20,18 +20,6 @@
     margin-bottom: 0;
   }
 
-  .agenda-item .title--small {
-    font-size: 11px !important;
-  }
-
-  .agenda-item .description {
-    font-size: 10px !important;
-  }
-
-  .agenda-item .label--small {
-    font-size: 9px !important;
-  }
-
   .agenda-time {
     white-space: nowrap;
   }
@@ -76,7 +64,7 @@
           {% assign displayed_count = displayed_count | plus: 1 %}
           {% if display_date != last_rendered_date %}
             {% assign last_rendered_date = display_date %}
-            <span class="label label--small label--underline">{{ display_date | date: "%a, %b %-d" }}</span>
+            <span class="{{ agenda_label_class }}">{{ display_date | date: "%a, %b %-d" }}</span>
           {% endif %}
         {% else %}
           {% continue %}
@@ -94,26 +82,23 @@
         <div class="item agenda-item item--emphasis-{{ emphasis_level }}">
           <div class="meta"></div>
           <div class="content">
-            <span class="title title--small">{{ event.summary | default: "Untitled event" }}</span>
-            {% if event.description and event.description != "" %}
+            <span class="{{ agenda_title_class }}">{{ event.summary | default: "Untitled event" }}</span>
+            {% if show_event_descriptions and event.description and event.description != "" %}
               <span class="description" data-clamp="1">{{ event.description }}</span>
             {% endif %}
             <div class="flex gap--small">
               {% if event.all_day %}
-                <span class="label label--small label--underline">All Day</span>
+                <span class="{{ agenda_label_class }}">All Day</span>
               {% else %}
                 {% assign start_local_epoch = event.start | date: "%s" | plus: effective_utc_offset %}
                 {% assign end_local_epoch = event.end | date: "%s" | plus: effective_utc_offset %}
                 {% assign display_start = start_local_epoch | date: "%-I:%M %p" %}
                 {% assign display_end = end_local_epoch | date: "%-I:%M %p" %}
                 <span
-                  class="label label--small label--underline agenda-time"
+                  class="{{ agenda_label_class }} agenda-time"
                 >
                   {{ display_start }} - {{ display_end }}
                 </span>
-              {% endif %}
-              {% if event.source %}
-                <span class="label label--small label--underline">{{ event.source }}</span>
               {% endif %}
             </div>
           </div>
@@ -124,7 +109,7 @@
     <div class="item agenda-item">
       <div class="meta"></div>
       <div class="content">
-        <span class="title title--small">No events in 7 days</span>
+        <span class="{{ agenda_title_class }}">No events in 7 days</span>
         <span class="description">Your schedule is clear.</span>
       </div>
     </div>

@@ -20,14 +20,6 @@
     margin-bottom: 0;
   }
 
-  .agenda-item-quadrant .title--small {
-    font-size: 9px !important;
-  }
-
-  .agenda-item-quadrant .label--small {
-    font-size: 7px !important;
-  }
-
   .agenda-time-quadrant {
     white-space: nowrap;
   }
@@ -37,7 +29,7 @@
   }
 
   .agenda-item-quadrant .meta {
-    display: none;
+    display: block;
   }
 </style>
 
@@ -83,7 +75,7 @@
           {% endif %}
           {% if display_date != last_rendered_date %}
             {% assign last_rendered_date = display_date %}
-            <span class="label label--small label--underline">{{ display_date | date: "%a, %b %-d" }}</span>
+            <span class="{{ agenda_label_class }}">{{ display_date | date: "%a, %b %-d" }}</span>
           {% endif %}
         {% else %}
           {% continue %}
@@ -101,15 +93,15 @@
         <div class="item agenda-item-quadrant item--emphasis-{{ emphasis_level }}">
           <div class="meta"></div>
           <div class="content">
-            <span class="title title--small">{{ event.summary | default: "Untitled event" }}</span>
+            <span class="{{ agenda_title_class }}">{{ event.summary | default: "Untitled event" }}</span>
             <div class="flex gap--small">
               {% if event.all_day %}
-                <span class="label label--small label--underline">All Day</span>
+                <span class="{{ agenda_label_class }}">All Day</span>
               {% else %}
                 {% assign start_local_epoch = event.start | date: "%s" | plus: effective_utc_offset %}
                 {% assign display_start = start_local_epoch | date: "%-I:%M %p" %}
                 <span
-                  class="label label--small label--underline agenda-time-quadrant"
+                  class="{{ agenda_label_class }} agenda-time-quadrant"
                 >
                   {{ display_start }}
                 </span>
@@ -123,7 +115,7 @@
     <div class="item agenda-item-quadrant">
       <div class="meta"></div>
       <div class="content">
-        <span class="title title--small">No events today</span>
+        <span class="{{ agenda_title_class }}">No events today</span>
       </div>
     </div>
   {% endif %}

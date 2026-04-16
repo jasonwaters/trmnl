@@ -170,6 +170,15 @@ parcel/
 
 Based on the [Parcel plugin](https://github.com/usetrmnl/trmnl_plugins/tree/master/lib/parcel) from the official TRMNL plugins repository.
 
+## Mashup Safety Checklist
+
+When using multiple instances in one mashup:
+
+- Generate per-instance IDs for all JS targets (containers, title bars, counters, labels)
+- Keep shared logic in `src/shared.liquid`; pass IDs from each layout to shared initializers
+- Avoid hardcoded `document.getElementById(...)` defaults unless overridden per instance
+- Avoid top-level global declarations that can redeclare in concatenated mashup scripts
+
 ## License
 
 MIT

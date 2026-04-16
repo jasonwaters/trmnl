@@ -3,14 +3,14 @@
     <div class="item">
       <div class="meta"></div>
       <div class="content">
-        <span class="value" id="delivery-count">{{ deliveries | size }}</span>
-        <span class="label" id="filter-label">Deliveries</span>
+        <span class="value" id="{{ parcel_delivery_count_id }}">{{ deliveries | size }}</span>
+        <span class="label" id="{{ parcel_filter_label_id }}">Deliveries</span>
       </div>
     </div>
     <div class="item">
       <div class="meta"></div>
       <div class="content">
-        <span class="value" id="out-for-delivery-count">0</span>
+        <span class="value" id="{{ parcel_out_for_delivery_count_id }}">0</span>
         <span class="label">Out for Delivery</span>
       </div>
     </div>
@@ -21,7 +21,7 @@
   <div class="columns">
     <div
       class="column"
-      id="deliveries-container"
+      id="{{ parcel_deliveries_container_id }}"
       data-list-limit="true"
       data-list-hidden-count="false"
       data-list-max-columns="1"
@@ -40,14 +40,20 @@
   </div>
 </div>
 
-<div id="parcel-title-bar"></div>
+<div id="{{ parcel_title_bar_id }}"></div>
 
 <script>
-  initializeParcelTitleBar();
-  initializeParcelTemplate({
-    containerId: 'deliveries-container',
-    showSummary: true,
-    outForDeliveryId: 'out-for-delivery-count',
-    filterLabelId: 'filter-label'
-  });
+  (function() {
+    const parcelInstance = window.__parcelInstances && window.__parcelInstances[{{ parcel_instance_key | json }}];
+    if (!parcelInstance) return;
+    parcelInstance.initializeTitleBar({
+      targetId: {{ parcel_title_bar_id | json }}
+    });
+    parcelInstance.initializeTemplate({
+      containerId: {{ parcel_deliveries_container_id | json }},
+      showSummary: true,
+      outForDeliveryId: {{ parcel_out_for_delivery_count_id | json }},
+      filterLabelId: {{ parcel_filter_label_id | json }}
+    });
+  })();
 </script>

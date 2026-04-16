@@ -2,7 +2,7 @@
   <div class="columns">
     <div
       class="column"
-      id="deliveries-container"
+      id="{{ parcel_deliveries_container_id }}"
       data-list-limit="true"
       data-list-hidden-count="false"
       data-list-max-columns="3"
@@ -21,11 +21,17 @@
   </div>
 </div>
 
-<div id="parcel-title-bar"></div>
+<div id="{{ parcel_title_bar_id }}"></div>
 
 <script>
-  initializeParcelTitleBar();
-  initializeParcelTemplate({
-    containerId: 'deliveries-container'
-  });
+  (function() {
+    const parcelInstance = window.__parcelInstances && window.__parcelInstances[{{ parcel_instance_key | json }}];
+    if (!parcelInstance) return;
+    parcelInstance.initializeTitleBar({
+      targetId: {{ parcel_title_bar_id | json }}
+    });
+    parcelInstance.initializeTemplate({
+      containerId: {{ parcel_deliveries_container_id | json }}
+    });
+  })();
 </script>

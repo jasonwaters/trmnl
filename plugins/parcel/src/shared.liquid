@@ -1,10 +1,20 @@
+{% assign parcel_instance_suffix = "parcel" | append_random %}
+{% assign parcel_instance_key = parcel_instance_suffix %}
+{% assign parcel_deliveries_container_id = "deliveries-container-" | append: parcel_instance_suffix %}
+{% assign parcel_title_bar_id = "parcel-title-bar-" | append: parcel_instance_suffix %}
+{% assign parcel_delivery_count_id = "delivery-count-" | append: parcel_instance_suffix %}
+{% assign parcel_filter_label_id = "filter-label-" | append: parcel_instance_suffix %}
+{% assign parcel_out_for_delivery_count_id = "out-for-delivery-count-" | append: parcel_instance_suffix %}
+
 <script>
+  (function() {
+  const PARCEL_INSTANCE_KEY = {{ parcel_instance_key | json }};
   const PARCEL_USER_LOCALE = {{ trmnl.user.locale | default: "en-US" | json }};
   const PARCEL_RAW_UTC_OFFSET = {{ trmnl.user.utc_offset | default: 0 | plus: 0 }};
   const PARCEL_CURRENT_UTC_EPOCH = {{ trmnl.system.timestamp_utc | plus: 0 }};
   const PARCEL_FILTER_MODE = "{{ trmnl.plugin_settings.custom_fields_values.filter_mode | default: 'active' }}";
   const PARCEL_STYLE = "{{ trmnl.plugin_settings.custom_fields_values.style | default: 'detailed' }}";
-  const PARCEL_DAY_COUNTER = "{{ trmnl.plugin_settings.custom_fields_values.day_counter | default: 'days_till_delivery' }}";
+  const PARCEL_SORT_BY = "{{ trmnl.plugin_settings.custom_fields_values.sort_by | default: 'estimated_delivery_date' }}";
 
   const PARCEL_DELIVERIES = [
     {% for d in deliveries %}
@@ -96,26 +106,49 @@
     return expectedDate.toLocaleDateString(PARCEL_USER_LOCALE, { month: 'short', day: 'numeric', timeZone: 'UTC' });
   }
 
-  function parcelGetDayCount(delivery) {
-    if (PARCEL_DAY_COUNTER === 'none') return null;
-
-    let dayCount = null;
-    if (PARCEL_DAY_COUNTER === 'days_after_postage') {
-      const oldestEvent = delivery.events && delivery.events.length > 0
-        ? delivery.events[delivery.events.length - 1].date
-        : null;
-      dayCount = parcelDiffDaysByDateKey(PARCEL_TODAY_DATE_KEY, parcelInputToLocalDateKey(oldestEvent));
-    } else {
-      dayCount = parcelDiffDaysByDateKey(parcelInputToLocalDateKey(delivery.dateExpected), PARCEL_TODAY_DATE_KEY);
-    }
-
-    if (dayCount === null) return null;
-    if (dayCount < 0) dayCount = 0;
+  function parcelGetTransitDayCount(delivery) {
+    var dayCount = parcelDiffDaysByDateKey(parcelInputToLocalDateKey(delivery.dateExpected), PARCEL_TODAY_DATE_KEY);
+    if (dayCount === null || dayCount < 0) return 0;
     return dayCount;
   }
 
-  function parcelGetDayCountLabel(dayCount) {
-    return dayCount === 1 ? 'Day' : 'Days';
+  function parcelMaterialSymbolIconMarkup(iconName, altText) {
+    return `
+      <img
+        src="https://fonts.gstatic.com/s/i/short-term/release/materialsymbolsoutlined/${iconName}/default/24px.svg"
+        class="no-shrink"
+        style="width: 48px; height: 48px;"
+        alt="${altText}"
+      />
+    `;
+  }
+
+  function parcelTransitIconMarkup(delivery) {
+    var transitDays = parcelGetTransitDayCount(delivery);
+    if (transitDays > 9) {
+      return parcelMaterialSymbolIconMarkup('timer', 'In Transit');
+    }
+    var counterValue = Math.max(0, Math.min(9, transitDays));
+    return parcelMaterialSymbolIconMarkup(`counter_${counterValue}`, `In Transit: ${counterValue} days`);
+  }
+
+  function parcelStatusIconMarkup(delivery) {
+    var statusCode = delivery.statusCode;
+    if (statusCode === 0) return parcelMaterialSymbolIconMarkup('check_circle', 'Delivered');
+    if (statusCode === 1) return parcelMaterialSymbolIconMarkup('ac_unit', 'Frozen');
+    if (statusCode === 2 || statusCode === 4) return parcelTransitIconMarkup(delivery);
+    if (statusCode === 3) return parcelMaterialSymbolIconMarkup('airport_shuttle', 'Pickup Available');
+    if (statusCode === 5 || statusCode === 8) return parcelMaterialSymbolIconMarkup('question_mark', 'Status Unknown');
+    if (statusCode === 6 || statusCode === 7) return parcelMaterialSymbolIconMarkup('priority_high', 'Delivery Exception');
+    return parcelMaterialSymbolIconMarkup('question_mark', 'Status Unknown');
+  }
+
+  function parcelRenderLeadingContent(delivery) {
+    return `
+      <div class="icon no-shrink flex flex--center-x" style="width: 54px; min-width: 54px;">
+        ${parcelStatusIconMarkup(delivery)}
+      </div>
+    `;
   }
 
   function parcelGetEmphasisClass(delivery) {
@@ -129,32 +162,105 @@
     return 'item--emphasis-1';
   }
 
+  function parcelIsDeliveredStatus(statusCode) {
+    return statusCode === 0;
+  }
+
+  function parcelGetLatestEventEpoch(delivery) {
+    if (!delivery.events || !delivery.events.length) return null;
+    return parcelParseInputToEpochSeconds(delivery.events[0].date);
+  }
+
+  function parcelGetOldestEventEpoch(delivery) {
+    if (!delivery.events || !delivery.events.length) return null;
+    return parcelParseInputToEpochSeconds(delivery.events[delivery.events.length - 1].date);
+  }
+
+  function parcelGetExpectedEpoch(delivery) {
+    return parcelParseInputToEpochSeconds(delivery.dateExpected);
+  }
+
+  function parcelSortByEstimatedDeliveryDate(left, right) {
+    var leftDelivered = parcelIsDeliveredStatus(left.statusCode);
+    var rightDelivered = parcelIsDeliveredStatus(right.statusCode);
+    if (leftDelivered !== rightDelivered) return leftDelivered ? 1 : -1;
+
+    var leftExpected = parcelGetExpectedEpoch(left);
+    var rightExpected = parcelGetExpectedEpoch(right);
+    var leftHasExpected = Number.isFinite(leftExpected);
+    var rightHasExpected = Number.isFinite(rightExpected);
+
+    if (leftHasExpected !== rightHasExpected) return leftHasExpected ? -1 : 1;
+    if (leftHasExpected && rightHasExpected && leftExpected !== rightExpected) {
+      return leftExpected - rightExpected;
+    }
+
+    var leftLatest = parcelGetLatestEventEpoch(left);
+    var rightLatest = parcelGetLatestEventEpoch(right);
+    if (Number.isFinite(leftLatest) && Number.isFinite(rightLatest) && leftLatest !== rightLatest) {
+      return rightLatest - leftLatest;
+    }
+
+    return String(left.title || '').localeCompare(String(right.title || ''), PARCEL_USER_LOCALE);
+  }
+
+  function parcelSortDeliveries(deliveries) {
+    var sorted = deliveries.slice();
+
+    if (PARCEL_SORT_BY === 'name') {
+      sorted.sort(function(left, right) {
+        return String(left.title || '').localeCompare(String(right.title || ''), PARCEL_USER_LOCALE);
+      });
+      return sorted;
+    }
+
+    if (PARCEL_SORT_BY === 'last_updated') {
+      sorted.sort(function(left, right) {
+        var leftLatest = parcelGetLatestEventEpoch(left);
+        var rightLatest = parcelGetLatestEventEpoch(right);
+        if (!Number.isFinite(leftLatest) && !Number.isFinite(rightLatest)) return 0;
+        if (!Number.isFinite(leftLatest)) return 1;
+        if (!Number.isFinite(rightLatest)) return -1;
+        return rightLatest - leftLatest;
+      });
+      return sorted;
+    }
+
+    if (PARCEL_SORT_BY === 'date_added') {
+      sorted.sort(function(left, right) {
+        var leftOldest = parcelGetOldestEventEpoch(left);
+        var rightOldest = parcelGetOldestEventEpoch(right);
+        if (!Number.isFinite(leftOldest) && !Number.isFinite(rightOldest)) return 0;
+        if (!Number.isFinite(leftOldest)) return 1;
+        if (!Number.isFinite(rightOldest)) return -1;
+        return leftOldest - rightOldest;
+      });
+      return sorted;
+    }
+
+    sorted.sort(parcelSortByEstimatedDeliveryDate);
+    return sorted;
+  }
+
   function parcelRenderDelivery(delivery, style) {
     const statusLabel = PARCEL_STATUS_LABELS[delivery.statusCode] || 'Unknown';
     const latestEvent = delivery.events && delivery.events.length > 0 ? delivery.events[0].event : null;
     const deliveryBy = parcelFormatDeliveryBy(delivery.dateExpected);
-    const dayCount = parcelGetDayCount(delivery);
     const emphasisClass = parcelGetEmphasisClass(delivery);
 
     if (style === 'compact') {
       return `
         <div class="item ${emphasisClass}">
           <div class="meta"></div>
-          <div class="flex w--full gap--large">
-            ${dayCount !== null ? `
-            <div class="content no-shrink">
-              <span class="value value--small" data-value-fit="true">${dayCount}</span>
-              <span class="label label--small">${parcelGetDayCountLabel(dayCount)}</span>
-            </div>` : ''}
-            <div class="content">
-              <div class="flex flex--row">
-                <span class="title title--small">${delivery.title}</span>
-                <span class="label label--small label--inverted no-shrink">${statusLabel}</span>
-              </div>
-              <div class="description">
-                ${latestEvent ? `<div class="label label--small clamp--2">${latestEvent}</div>` : ''}
-                ${deliveryBy ? `<div class="label label--small clamp--2">Delivery by: ${deliveryBy}</div>` : ''}
-              </div>
+          ${parcelRenderLeadingContent(delivery)}
+          <div class="content">
+            <div class="flex flex--row">
+              <span class="title title--small">${delivery.title}</span>
+              <span class="label label--small label--inverted no-shrink">${statusLabel}</span>
+            </div>
+            <div class="description">
+              ${latestEvent ? `<div class="label label--small clamp--2">${latestEvent}</div>` : ''}
+              ${deliveryBy ? `<div class="label label--small clamp--2">Delivery by: ${deliveryBy}</div>` : ''}
             </div>
           </div>
         </div>`;
@@ -163,19 +269,13 @@
     return `
       <div class="item ${emphasisClass}">
         <div class="meta"></div>
-        <div class="flex w--full gap--large">
-          ${dayCount !== null ? `
-          <div class="content no-shrink">
-            <span class="value value--base" data-value-fit="true">${dayCount}</span>
-            <span class="label">${parcelGetDayCountLabel(dayCount)}</span>
-          </div>` : ''}
-          <div class="content">
-            <span class="title title--small">${delivery.title}</span>
-            ${latestEvent ? `<div class="label label--small clamp--2">${latestEvent}</div>` : ''}
-            <div class="flex gap--small">
-              <span class="label label--small label--inverted">${statusLabel}</span>
-              ${deliveryBy ? `<span class="label label--small label--underline">Delivery by: ${deliveryBy}</span>` : ''}
-            </div>
+        ${parcelRenderLeadingContent(delivery)}
+        <div class="content">
+          <span class="title title--small">${delivery.title}</span>
+          ${latestEvent ? `<div class="label label--small clamp--2">${latestEvent}</div>` : ''}
+          <div class="flex gap--small">
+            <span class="label label--small label--inverted">${statusLabel}</span>
+            ${deliveryBy ? `<span class="label label--small label--underline">Delivery by: ${deliveryBy}</span>` : ''}
           </div>
         </div>
       </div>`;
@@ -226,8 +326,15 @@
     }
 
     if (!container || PARCEL_DELIVERIES.length === 0) return;
-    container.innerHTML = PARCEL_DELIVERIES.map(function(delivery) {
+    var sortedDeliveries = parcelSortDeliveries(PARCEL_DELIVERIES);
+    container.innerHTML = sortedDeliveries.map(function(delivery) {
       return parcelRenderDelivery(delivery, style);
     }).join('');
   }
+  window.__parcelInstances = window.__parcelInstances || {};
+  window.__parcelInstances[PARCEL_INSTANCE_KEY] = {
+    initializeTitleBar: initializeParcelTitleBar,
+    initializeTemplate: initializeParcelTemplate
+  };
+  })();
 </script>

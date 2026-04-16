@@ -166,6 +166,15 @@ health-chart/
     └── quadrant.liquid
 ```
 
+## Mashup Safety Checklist
+
+For reliable side-by-side chart mashups:
+
+- Generate per-instance DOM IDs in `src/shared.liquid`
+- Wrap shared JS in an IIFE and register instance-scoped initializers
+- Call the correct initializer from each layout using an instance key
+- Avoid global top-level declarations that can collide when scripts are concatenated
+
 ## License
 
 MIT

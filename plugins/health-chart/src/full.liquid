@@ -30,7 +30,7 @@
 
 <script type="text/javascript">
   (function() {
-    const healthChartInstance = window.__healthChartInstances && window.__healthChartInstances[{{ health_id_suffix | json }}];
+    const healthChartInstance = window.__healthChartInstances && window.__healthChartInstances[{{ health_instance_key | json }}];
     if (!healthChartInstance) return;
 
     healthChartInstance.initialize({

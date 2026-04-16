@@ -93,6 +93,11 @@ When the same plugin can appear multiple times in a mashup, treat the page as a 
   - `{% assign instance_suffix = "plugin" | append_random %}`
   - Build every JS target ID from that suffix in one place.
 - Keep ID definitions DRY in `shared.liquid`, not repeated at the top of every layout.
+- Use consistent instance naming across plugins:
+  - `*_instance_suffix` for the random Liquid suffix (for example `{% assign stock_instance_suffix = "stock" | append_random %}`)
+  - `*_instance_key` when passing that suffix into JS registries/selectors
+  - `*_..._id` for all DOM IDs derived from the suffix
+  - Prefer one shared base ID per plugin feature (for example `weather_chart_id`) and reuse it across layouts.
 - Prefer instance-scoped JS over global functions/variables:
   - Wrap shared JS in an IIFE.
   - Register per-instance initializer in a keyed registry (for example `window.__pluginInstances[instance_suffix]`).

@@ -205,6 +205,16 @@ Different currency symbols use different decimal separators:
 
 The plugin handles this automatically based on your currency symbol selection.
 
+## Mashup Safety Checklist
+
+When running multiple plugin instances in a single mashup:
+
+- Use per-instance DOM IDs generated with Liquid (for example `append_random`)
+- Keep shared JS in `src/shared.liquid`; keep layout files focused on structure/init only
+- Isolate shared JS in an IIFE and register per-instance initializers in a global registry
+- Pass instance-specific IDs into the initializer instead of hardcoded selectors
+- Avoid top-level global `const`/`let` declarations that can collide across concatenated scripts
+
 ## Resources
 
 - [Finnhub API Documentation](https://finnhub.io/docs/api)

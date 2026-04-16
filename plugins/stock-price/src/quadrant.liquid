@@ -1,5 +1,5 @@
 <div class="view view--quadrant">
-  <div class="layout layout--col gap--space-between" id="tickers-container"></div>
+  <div class="layout layout--col gap--space-between" id="{{ stock_tickers_container_id }}"></div>
 
   <div class="title_bar">
     <img class="image" src="https://usetrmnl.com/images/plugins/stock_price--render.svg" />
@@ -8,147 +8,9 @@
 </div>
 
 <script>
-  const CURRENCY_SYMBOLS = {
-    usd: '$', eur: '€', gbp: '£', jpy: '¥', cad: '$', chf: '₣'
-  };
-
-  const CURRENCY_SEPARATORS = {
-    eur: ',', default: '.'
-  };
-
-  const symbolList = "{{ trmnl.plugin_settings.custom_fields_values.symbol | default: 'AAPL' }}";
-  const symbols = symbolList.split(',').map(s => s.trim());
-  const changeDisplay = "{{ trmnl.plugin_settings.custom_fields_values.change_display | default: 'percentage' }}";
-  const currencyCode = "{{ trmnl.plugin_settings.custom_fields_values.currency_symbol | default: 'usd' }}";
-  const currencySymbol = CURRENCY_SYMBOLS[currencyCode] || '$';
-  const currencySeparator = CURRENCY_SEPARATORS[currencyCode] || CURRENCY_SEPARATORS.default;
-
-  // Build rawData object from Liquid variables
-  const rawData = {
-    {% if IDX_0 %}IDX_0: {{ IDX_0 | json }}{% endif %}
-    {% if IDX_1 %},IDX_1: {{ IDX_1 | json }}{% endif %}
-    {% if IDX_2 %},IDX_2: {{ IDX_2 | json }}{% endif %}
-    {% if IDX_3 %},IDX_3: {{ IDX_3 | json }}{% endif %}
-    {% if IDX_4 %},IDX_4: {{ IDX_4 | json }}{% endif %}
-    {% if IDX_5 %},IDX_5: {{ IDX_5 | json }}{% endif %}
-    {% if IDX_6 %},IDX_6: {{ IDX_6 | json }}{% endif %}
-    {% if IDX_7 %},IDX_7: {{ IDX_7 | json }}{% endif %}
-    {% if IDX_8 %},IDX_8: {{ IDX_8 | json }}{% endif %}
-    {% if IDX_9 %},IDX_9: {{ IDX_9 | json }}{% endif %}
-    {% if IDX_10 %},IDX_10: {{ IDX_10 | json }}{% endif %}
-    {% if IDX_11 %},IDX_11: {{ IDX_11 | json }}{% endif %}
-  };
-
-  const tickers = symbols.map((symbol, index) => {
-    const key = `IDX_${index}`;
-    const data = rawData[key] || rawData;
-    
-    if (!data || data.error) return null;
-
-    const price = data.c || 0;
-    const change = changeDisplay === 'percentage' 
-      ? `${(data.dp || 0).toFixed(2)}%`
-      : `${(data.d || 0) >= 0 ? '+' : ''}${(data.d || 0).toFixed(2)}`;
-
-    return {
-      symbol: symbol.toUpperCase(),
-      name: symbol.toUpperCase(),
-      price: price,
-      change: change
-    };
-  }).filter(t => t !== null);
-
-  function formatCurrency(value) {
-    const formatted = value.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-    return currencySeparator === ',' 
-      ? `${currencySymbol}${formatted.replace(',', 'TEMP').replace('.', ',').replace('TEMP', '.')}`
-      : `${currencySymbol}${formatted}`;
-  }
-
-  function renderTicker_medium(ticker) {
-    return `
-      <div class="grid grid--cols-1">
-        <div class="grid grid--cols-2">
-          <div class="item">
-            <div class="meta"></div>
-            <div class="content">
-              <span class="value">${ticker.symbol.replace(/ /g, '&nbsp;')}</span>
-              <span class="label">${ticker.name}</span>
-            </div>
-          </div>
-          <div class="item">
-            <div class="meta"></div>
-            <div class="content">
-              <span class="value value--small value--tnums">${ticker.change}</span>
-              <span class="label">Daily Change</span>
-            </div>
-          </div>
-        </div>
-        <div class="item">
-          <div class="meta"></div>
-          <div class="content">
-            <span class="value value--xlarge value--tnums">${formatCurrency(ticker.price)}</span>
-          </div>
-        </div>
-      </div>`;
-  }
-
-  function renderTicker_xsmall(ticker) {
-    return `
-      <div class="grid">
-        <div class="item col--span-3">
-          <div class="meta"></div>
-          <div class="content">
-            <span class="value value--small">${ticker.symbol.replace(/ /g, '&nbsp;')}</span>
-            <span class="label">${ticker.change}</span>
-          </div>
-        </div>
-        <div class="item col--span-6">
-          <div class="meta"></div>
-          <div class="content">
-            <span class="value value--tnums">${formatCurrency(ticker.price)}</span>
-          </div>
-        </div>
-      </div>`;
-  }
-
-  function renderTicker_xxsmall(ticker) {
-    return `
-      <div class="grid">
-        <div class="item col--span-3">
-          <div class="meta"></div>
-          <div class="content">
-            <span class="value value--xsmall value--tnums">${ticker.symbol.replace(/ /g, '&nbsp;')}</span>
-            <span class="label">${ticker.change}</span>
-          </div>
-        </div>
-        <div class="item col--span-6">
-          <div class="meta"></div>
-          <div class="content">
-            <span class="value value--tnums">${formatCurrency(ticker.price)}</span>
-          </div>
-        </div>
-      </div>`;
-  }
-
-  function renderQuadrantLayout(tickers) {
-    const container = document.getElementById('tickers-container');
-    const count = tickers.length;
-
-    if (count === 1) {
-      container.innerHTML = renderTicker_medium(tickers[0]);
-    } else if (count === 2) {
-      container.innerHTML = tickers.map((t, i) => 
-        renderTicker_xsmall(t) + (i === 0 ? '<div class="w-full b-h-gray-5"></div>' : '')
-      ).join('');
-    } else if (count >= 3) {
-      container.innerHTML = tickers.map((t, i) => 
-        renderTicker_xxsmall(t) + (i < count - 1 ? '<div class="w-full b-h-gray-5"></div>' : '')
-      ).join('');
-    }
-  }
-
-  if (tickers.length > 0) {
-    renderQuadrantLayout(tickers);
-  }
+  (function() {
+    const stockPriceInstance = window.__stockPriceInstances && window.__stockPriceInstances[{{ stock_instance_key | json }}];
+    if (!stockPriceInstance) return;
+    stockPriceInstance.renderLayout('quadrant', {{ stock_tickers_container_id | json }});
+  })();
 </script>

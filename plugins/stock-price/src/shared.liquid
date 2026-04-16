@@ -1,0 +1,335 @@
+{% assign stock_instance_suffix = "stock" | append_random %}
+{% assign stock_instance_key = stock_instance_suffix %}
+{% assign stock_tickers_container_id = "tickers-container-" | append: stock_instance_suffix %}
+
+<script>
+  (function() {
+    const STOCK_INSTANCE_KEY = {{ stock_instance_key | json }};
+    const CURRENCY_SYMBOLS = {
+      usd: '$', eur: '€', gbp: '£', jpy: '¥', cad: '$', chf: '₣'
+    };
+    const CURRENCY_SEPARATORS = {
+      eur: ',', default: '.'
+    };
+    const DIVIDER = '<div class="w-full b-h-gray-5"></div>';
+
+    const symbolList = "{{ trmnl.plugin_settings.custom_fields_values.symbol | default: 'AAPL' }}";
+    const symbols = symbolList.split(',').map(function(symbol) {
+      return symbol.trim();
+    });
+    const changeDisplay = "{{ trmnl.plugin_settings.custom_fields_values.change_display | default: 'percentage' }}";
+    const currencyCode = "{{ trmnl.plugin_settings.custom_fields_values.currency_symbol | default: 'usd' }}";
+    const currencySymbol = CURRENCY_SYMBOLS[currencyCode] || '$';
+    const currencySeparator = CURRENCY_SEPARATORS[currencyCode] || CURRENCY_SEPARATORS.default;
+
+    const rawData = {
+      {% if IDX_0 %}IDX_0: {{ IDX_0 | json }}{% endif %}
+      {% if IDX_1 %},IDX_1: {{ IDX_1 | json }}{% endif %}
+      {% if IDX_2 %},IDX_2: {{ IDX_2 | json }}{% endif %}
+      {% if IDX_3 %},IDX_3: {{ IDX_3 | json }}{% endif %}
+      {% if IDX_4 %},IDX_4: {{ IDX_4 | json }}{% endif %}
+      {% if IDX_5 %},IDX_5: {{ IDX_5 | json }}{% endif %}
+      {% if IDX_6 %},IDX_6: {{ IDX_6 | json }}{% endif %}
+      {% if IDX_7 %},IDX_7: {{ IDX_7 | json }}{% endif %}
+      {% if IDX_8 %},IDX_8: {{ IDX_8 | json }}{% endif %}
+      {% if IDX_9 %},IDX_9: {{ IDX_9 | json }}{% endif %}
+      {% if IDX_10 %},IDX_10: {{ IDX_10 | json }}{% endif %}
+      {% if IDX_11 %},IDX_11: {{ IDX_11 | json }}{% endif %}
+    };
+
+    const tickers = symbols.map(function(symbol, index) {
+      const key = 'IDX_' + index;
+      const data = rawData[key] || rawData;
+      if (!data || data.error) return null;
+
+      const price = data.c || 0;
+      const change = changeDisplay === 'percentage'
+        ? (data.dp || 0).toFixed(2) + '%'
+        : ((data.d || 0) >= 0 ? '+' : '') + (data.d || 0).toFixed(2);
+
+      return {
+        symbol: symbol.toUpperCase(),
+        name: symbol.toUpperCase(),
+        price: price,
+        change: change
+      };
+    }).filter(function(ticker) {
+      return ticker !== null;
+    });
+
+    function formatCurrency(value) {
+      const formatted = value.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+      if (currencySeparator !== ',') {
+        return currencySymbol + formatted;
+      }
+      return currencySymbol + formatted.replace(',', 'TEMP').replace('.', ',').replace('TEMP', '.');
+    }
+
+    function escapeSymbol(symbol) {
+      return symbol.replace(/ /g, '&nbsp;');
+    }
+
+    function renderTickerXxlarge(ticker) {
+      return `
+        <div class="grid grid--cols-1 gap--xxlarge" style="max-width: 85%;">
+          <div class="grid grid--cols-2">
+            <div class="item">
+              <div class="meta"></div>
+              <div class="content">
+                <span class="value value--large">${escapeSymbol(ticker.symbol)}</span>
+                <span class="label label--large">${ticker.name}</span>
+              </div>
+            </div>
+            <div class="item">
+              <div class="meta"></div>
+              <div class="content">
+                <span class="value value--large value--tnums">${ticker.change}</span>
+                <span class="label label--large">Daily Change</span>
+              </div>
+            </div>
+          </div>
+          <div class="item">
+            <div class="meta"></div>
+            <div class="content">
+              <span class="value value--xxxlarge value--tnums">${formatCurrency(ticker.price)}</span>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    function renderTickerXlarge(ticker) {
+      return `
+        <div class="grid">
+          <div class="col--span-3">
+            <div class="grid grid--cols-1">
+              <div class="item">
+                <div class="meta"></div>
+                <div class="content">
+                  <span class="value">${escapeSymbol(ticker.symbol)}</span>
+                  <span class="label">${ticker.name}</span>
+                </div>
+              </div>
+              <div class="item">
+                <div class="meta"></div>
+                <div class="content">
+                  <span class="value value--small value--tnums">${ticker.change}</span>
+                  <span class="label">Daily Change</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="item col--span-7">
+            <div class="meta"></div>
+            <div class="content">
+              <span class="value value--xxlarge value--tnums">${formatCurrency(ticker.price)}</span>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    function renderTickerLarge(ticker) {
+      return `
+        <div class="grid">
+          <div class="col--span-2">
+            <div class="grid grid--cols-1">
+              <div class="item">
+                <div class="meta"></div>
+                <div class="content">
+                  <span class="value value--small">${escapeSymbol(ticker.symbol)}</span>
+                  <span class="label">${ticker.name}</span>
+                </div>
+              </div>
+              <div class="item">
+                <div class="meta"></div>
+                <div class="content">
+                  <span class="value value--small value--tnums">${ticker.change}</span>
+                  <span class="label">Daily Change</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="item col--span-4">
+            <div class="meta"></div>
+            <div class="content">
+              <span class="value value--xxlarge value--tnums">${formatCurrency(ticker.price)}</span>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    function renderTickerMedium(ticker) {
+      return `
+        <div class="grid grid--cols-1">
+          <div class="grid grid--cols-2">
+            <div class="item">
+              <div class="meta"></div>
+              <div class="content">
+                <span class="value">${escapeSymbol(ticker.symbol)}</span>
+                <span class="label">${ticker.name}</span>
+              </div>
+            </div>
+            <div class="item">
+              <div class="meta"></div>
+              <div class="content">
+                <span class="value value--small value--tnums">${ticker.change}</span>
+                <span class="label">Daily Change</span>
+              </div>
+            </div>
+          </div>
+          <div class="item">
+            <div class="meta"></div>
+            <div class="content">
+              <span class="value value--xlarge value--tnums">${formatCurrency(ticker.price)}</span>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    function renderTickerSmall(ticker) {
+      return `
+        <div class="grid grid--cols-1">
+          <div class="grid grid--cols-2">
+            <div class="item">
+              <div class="meta"></div>
+              <div class="content">
+                <span class="value value--xsmall">${escapeSymbol(ticker.symbol)}</span>
+                <span class="label">${ticker.name}</span>
+              </div>
+            </div>
+            <div class="item">
+              <div class="meta"></div>
+              <div class="content">
+                <span class="value value--xsmall value--tnums">${ticker.change}</span>
+                <span class="label">Daily Change</span>
+              </div>
+            </div>
+          </div>
+          <div class="item">
+            <div class="meta"></div>
+            <div class="content">
+              <span class="value value--large value--tnums">${formatCurrency(ticker.price)}</span>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    function renderTickerXsmall(ticker) {
+      return `
+        <div class="grid">
+          <div class="item col--span-3">
+            <div class="meta"></div>
+            <div class="content">
+              <span class="value value--small">${escapeSymbol(ticker.symbol)}</span>
+              <span class="label">${ticker.change}</span>
+            </div>
+          </div>
+          <div class="item col--span-6">
+            <div class="meta"></div>
+            <div class="content">
+              <span class="value value--tnums">${formatCurrency(ticker.price)}</span>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    function renderTickerXxsmall(ticker) {
+      return `
+        <div class="grid">
+          <div class="item col--span-3">
+            <div class="meta"></div>
+            <div class="content">
+              <span class="value value--xsmall value--tnums">${escapeSymbol(ticker.symbol)}</span>
+              <span class="label">${ticker.change}</span>
+            </div>
+          </div>
+          <div class="item col--span-6">
+            <div class="meta"></div>
+            <div class="content">
+              <span class="value value--tnums">${formatCurrency(ticker.price)}</span>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    function stackRows(rows, shouldAddDivider) {
+      return rows.map(function(row, index) {
+        return row + (shouldAddDivider(index) ? DIVIDER : '');
+      }).join('');
+    }
+
+    function renderTwoColumn(tickersSubset, perColumn, tickerRenderer) {
+      const leftRows = stackRows(tickersSubset.slice(0, perColumn).map(tickerRenderer), function(index) {
+        return index < perColumn - 1;
+      });
+      const rightSlice = tickersSubset.slice(perColumn, perColumn * 2);
+      const rightRows = stackRows(rightSlice.map(tickerRenderer), function(index) {
+        return index < rightSlice.length - 1;
+      });
+      return `
+        <div class="columns h-full">
+          <div class="column gap--space-between h-full">${leftRows}</div>
+          <div class="column gap--space-between h-full">${rightRows}</div>
+        </div>`;
+    }
+
+    function renderFullLayout(displayTickers) {
+      const count = displayTickers.length;
+      if (count === 1) return renderTickerXxlarge(displayTickers[0]);
+      if (count === 2) return stackRows(displayTickers.map(renderTickerXlarge), function(index) { return index === 0; });
+      if (count === 3) return stackRows(displayTickers.map(renderTickerLarge), function(index) { return index < 2; });
+      if (count === 4) return renderTwoColumn(displayTickers, 2, renderTickerMedium);
+      if (count >= 5 && count <= 6) return renderTwoColumn(displayTickers, 3, renderTickerSmall);
+      if (count >= 7 && count <= 8) return renderTwoColumn(displayTickers, 4, renderTickerXsmall);
+      if (count >= 9 && count <= 10) return renderTwoColumn(displayTickers, 5, renderTickerXsmall);
+      return renderTwoColumn(displayTickers.slice(0, 12), 6, renderTickerXsmall);
+    }
+
+    function renderHalfHorizontalLayout(displayTickers) {
+      const count = displayTickers.length;
+      if (count === 1) return renderTickerXlarge(displayTickers[0]);
+      if (count === 2) return stackRows(displayTickers.map(renderTickerMedium), function(index) { return index === 0; });
+      if (count >= 3 && count <= 4) return stackRows(displayTickers.map(renderTickerXsmall), function(index) { return index < count - 1; });
+      return stackRows(displayTickers.map(renderTickerXxsmall), function(index) { return index < count - 1; });
+    }
+
+    function renderHalfVerticalLayout(displayTickers) {
+      const count = displayTickers.length;
+      if (count >= 1 && count <= 2) {
+        return stackRows(displayTickers.map(renderTickerMedium), function(index) {
+          return index === 0 && count === 2;
+        });
+      }
+      if (count === 3) return stackRows(displayTickers.map(renderTickerSmall), function(index) { return index < 2; });
+      if (count === 4) return stackRows(displayTickers.map(renderTickerXsmall), function(index) { return index < 3; });
+      return stackRows(displayTickers.map(renderTickerXxsmall), function(index) { return index < count - 1; });
+    }
+
+    function renderQuadrantLayout(displayTickers) {
+      const count = displayTickers.length;
+      if (count === 1) return renderTickerMedium(displayTickers[0]);
+      if (count === 2) return stackRows(displayTickers.map(renderTickerXsmall), function(index) { return index === 0; });
+      return stackRows(displayTickers.map(renderTickerXxsmall), function(index) { return index < count - 1; });
+    }
+
+    function renderLayout(layoutType, containerId) {
+      if (!tickers.length) return;
+      const container = document.getElementById(containerId);
+      if (!container) return;
+
+      if (layoutType === 'full') {
+        container.innerHTML = renderFullLayout(tickers);
+      } else if (layoutType === 'half_horizontal') {
+        container.innerHTML = renderHalfHorizontalLayout(tickers);
+      } else if (layoutType === 'half_vertical') {
+        container.innerHTML = renderHalfVerticalLayout(tickers);
+      } else if (layoutType === 'quadrant') {
+        container.innerHTML = renderQuadrantLayout(tickers);
+      }
+    }
+
+    window.__stockPriceInstances = window.__stockPriceInstances || {};
+    window.__stockPriceInstances[STOCK_INSTANCE_KEY] = {
+      renderLayout: renderLayout
+    };
+  })();
+</script>

@@ -4,10 +4,10 @@
       <img src="https://raw.githubusercontent.com/nicholaswilde/trmnl-sheet-quote/refs/heads/main/src/img/sheet-quote.svg" class="w--[6cqw] h--[6cqw] portrait:w--[10cqw] portrait:h--[10cqw]" alt="Quote icon">
     </div>
     <span class="value value--xxxlarge quote-serif" data-value-fit="true" data-value-fit-max-height="170">
-      <span id="quote">Loading quote…</span>
+      <span id="{{ quote_text_id }}">Loading quote…</span>
     </span>
     <div class="label label--small text--gray-3 mt--3 quote-attribution">
-      <span id="author">Author</span>
+      <span id="{{ quote_author_id }}">Author</span>
     </div>
   </div>
 </div>
@@ -16,12 +16,14 @@
   try {
     window.sheetQuotePlugin.renderRandomQuote({
       payload: {{ data | default: "" | json }},
+      quoteSelector: {{ "#" | append: quote_text_id | json }},
+      authorSelector: {{ "#" | append: quote_author_id | json }},
       quoteIndex: {{ trmnl.plugin_settings.custom_fields_values.quote_index | plus: 0 }},
       authorIndex: {{ trmnl.plugin_settings.custom_fields_values.author_index | plus: 0 }}
     });
   } catch (error) {
     console.error("Sheet Quote: Critical Error", error);
-    document.querySelector("#quote").textContent = "Error: " + error.message;
-    document.querySelector("#author").textContent = "";
+    document.querySelector({{ "#" | append: quote_text_id | json }}).textContent = "Error: " + error.message;
+    document.querySelector({{ "#" | append: quote_author_id | json }}).textContent = "";
   }
 </script>

@@ -1,3 +1,8 @@
+{% assign quote_instance_suffix = "quote" | append_random %}
+{% assign quote_instance_key = quote_instance_suffix %}
+{% assign quote_text_id = "quote-" | append: quote_instance_suffix %}
+{% assign quote_author_id = "author-" | append: quote_instance_suffix %}
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&display=swap" rel="stylesheet">

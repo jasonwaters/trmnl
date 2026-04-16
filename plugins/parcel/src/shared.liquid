@@ -107,7 +107,11 @@
   }
 
   function parcelGetTransitDayCount(delivery) {
-    var dayCount = parcelDiffDaysByDateKey(parcelInputToLocalDateKey(delivery.dateExpected), PARCEL_TODAY_DATE_KEY);
+    var expectedDateValue = delivery.dateExpected || delivery.dateExpectedEnd;
+    var expectedDateKey = parcelInputToLocalDateKey(expectedDateValue);
+    if (!expectedDateKey) return null;
+
+    var dayCount = parcelDiffDaysByDateKey(expectedDateKey, PARCEL_TODAY_DATE_KEY);
     if (dayCount === null || dayCount < 0) return 0;
     return dayCount;
   }
@@ -125,6 +129,9 @@
 
   function parcelTransitIconMarkup(delivery) {
     var transitDays = parcelGetTransitDayCount(delivery);
+    if (transitDays === null) {
+      return parcelMaterialSymbolIconMarkup('local_shipping', 'In Transit');
+    }
     if (transitDays > 9) {
       return parcelMaterialSymbolIconMarkup('timer', 'In Transit');
     }
@@ -313,6 +320,9 @@
     const settings = options || {};
     const style = settings.style || PARCEL_STYLE;
     const container = document.getElementById(settings.containerId || 'deliveries-container');
+    const listHeightSafetyBufferPx = Number.isFinite(settings.listHeightSafetyBufferPx)
+      ? settings.listHeightSafetyBufferPx
+      : 4;
 
     if (settings.showSummary) {
       const outForDelivery = PARCEL_DELIVERIES.filter(function(delivery) {
@@ -326,10 +336,34 @@
     }
 
     if (!container || PARCEL_DELIVERIES.length === 0) return;
+
+    // Framework best practice: size list-limit from actual rendered container space,
+    // not from hard-coded heights or device metadata.
+    var measuredMaxHeight = null;
+    var layoutElement = container.closest('.layout');
+    if (layoutElement) {
+      var layoutRect = layoutElement.getBoundingClientRect();
+      var containerRect = container.getBoundingClientRect();
+      var spaceUsedAboveList = Math.max(0, containerRect.top - layoutRect.top);
+      var remainingHeightInLayout = Math.floor(layoutRect.height - spaceUsedAboveList);
+      if (remainingHeightInLayout > 0) measuredMaxHeight = remainingHeightInLayout;
+    }
+    if (!Number.isFinite(measuredMaxHeight)) {
+      measuredMaxHeight = parseInt(container.getAttribute('data-list-max-height'), 10);
+    }
+    if (Number.isFinite(measuredMaxHeight) && measuredMaxHeight > listHeightSafetyBufferPx) {
+      container.setAttribute('data-list-max-height', String(measuredMaxHeight - listHeightSafetyBufferPx));
+    }
+
     var sortedDeliveries = parcelSortDeliveries(PARCEL_DELIVERIES);
     container.innerHTML = sortedDeliveries.map(function(delivery) {
       return parcelRenderDelivery(delivery, style);
     }).join('');
+
+    // Nudge any framework list limiter that listens to resize/reflow.
+    requestAnimationFrame(function() {
+      window.dispatchEvent(new Event('resize'));
+    });
   }
   window.__parcelInstances = window.__parcelInstances || {};
   window.__parcelInstances[PARCEL_INSTANCE_KEY] = {

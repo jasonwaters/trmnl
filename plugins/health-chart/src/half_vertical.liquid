@@ -2,26 +2,31 @@
   <div class="grid grid--cols-1">
     <div class="item">
       <div class="content">
-        <span class="value value--tnums" id="current-weight">-</span>
+        <span class="value value--tnums" id="{{ current_value_id }}">-</span>
         <span class="label">CURRENT</span>
       </div>
     </div>
   </div>
 
-  <div id="health-chart" class="w--full h--full"></div>
+  <div id="{{ chart_element_id }}" class="w--full h--full"></div>
 </div>
 
 <div class="title_bar">
-  <span class="title" id="chart-title">{{ profileName | capitalize }}'s Trend</span>
+  <span class="title" id="{{ chart_title_id }}">{{ profileName | capitalize }}'s Trend</span>
   <span class="instance">Last {{ measurements.size }} Measurements</span>
 </div>
 
 <script type="text/javascript">
-  initializeHealthChart({
-    chartElementId: 'health-chart',
-    currentValueId: 'current-weight',
-    chartTitleId: 'chart-title',
-    axisFontSize: '13px',
-    lineWidth: 3
-  });
+  (function() {
+    const healthChartInstance = window.__healthChartInstances && window.__healthChartInstances[{{ health_id_suffix | json }}];
+    if (!healthChartInstance) return;
+
+    healthChartInstance.initialize({
+      chartElementId: {{ chart_element_id | json }},
+      currentValueId: {{ current_value_id | json }},
+      chartTitleId: {{ chart_title_id | json }},
+      axisFontSize: '13px',
+      lineWidth: 3
+    });
+  })();
 </script>

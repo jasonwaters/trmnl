@@ -1,17 +1,22 @@
 <div class="layout layout--col h--full">
-  <div id="health-chart" class="w--full h--full"></div>
+  <div id="{{ chart_element_id }}" class="w--full h--full"></div>
 </div>
 
 <div class="title_bar">
-  <span class="title" id="chart-title">{{ profileName | capitalize }}'s Trend</span>
+  <span class="title" id="{{ chart_title_id }}">{{ profileName | capitalize }}'s Trend</span>
   <span class="instance">Last {{ measurements.size }} Measurements</span>
 </div>
 
 <script type="text/javascript">
-  initializeHealthChart({
-    chartElementId: 'health-chart',
-    chartTitleId: 'chart-title',
-    axisFontSize: '14px',
-    lineWidth: 3
-  });
+  (function() {
+    const healthChartInstance = window.__healthChartInstances && window.__healthChartInstances[{{ health_id_suffix | json }}];
+    if (!healthChartInstance) return;
+
+    healthChartInstance.initialize({
+      chartElementId: {{ chart_element_id | json }},
+      chartTitleId: {{ chart_title_id | json }},
+      axisFontSize: '14px',
+      lineWidth: 3
+    });
+  })();
 </script>

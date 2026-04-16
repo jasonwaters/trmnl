@@ -83,6 +83,38 @@ Known-good Liquid patterns:
 - Reuse stable element IDs across layouts when possible to minimize per-layout branching in shared code.
 - If a layout intentionally omits a UI block (for example summary stats), pass config flags to shared initializers instead of forking logic.
 
+## Mashup-Safe JS and ID Rules (Critical)
+
+When the same plugin can appear multiple times in a mashup, treat the page as a shared global JS/DOM environment.
+
+- Assume mashup rendering concatenates plugin markup/scripts into a single document; duplicate global symbols (`const foo`) and duplicate DOM IDs (`id="chart"`) will collide.
+- Never hardcode IDs for JS-driven elements in reusable plugins (`chart`, `title`, `value`, etc). Generate per-instance IDs once in `shared.liquid`, then consume them from each layout.
+- Use TRMNL's documented uniqueness filter for per-instance suffixes:
+  - `{% assign instance_suffix = "plugin" | append_random %}`
+  - Build every JS target ID from that suffix in one place.
+- Keep ID definitions DRY in `shared.liquid`, not repeated at the top of every layout.
+- Prefer instance-scoped JS over global functions/variables:
+  - Wrap shared JS in an IIFE.
+  - Register per-instance initializer in a keyed registry (for example `window.__pluginInstances[instance_suffix]`).
+  - In each layout, call only that instance's initializer.
+- Avoid exposing mutable top-level globals (`var/let/const`) for instance data; keep data/config inside the IIFE closure.
+
+Health chart reference pattern (known-good):
+- In `shared.liquid`, define:
+  - `instance_suffix` via `append_random`
+  - all related IDs (`chart_element_id`, `title_id`, stats IDs) derived from suffix
+  - IIFE that captures data/config and registers `initialize` at `window.__healthChartInstances[instance_suffix]`
+- In each layout file, keep only:
+  - DOM structure using precomputed IDs
+  - a tiny bootstrap script that fetches `window.__healthChartInstances[instance_suffix]` and calls `.initialize({...})`
+
+Troubleshooting mashup duplicates:
+- If two tiles show the same data, check for:
+  - duplicate `id=` values across instances
+  - global function name collisions
+  - top-level `const` redeclaration failures halting second script execution
+  - shared state accidentally stored on `window` without instance keys
+
 ## Documentation and Scope
 
 - Update plugin `README.md` when adding/changing settings or modes.

@@ -1,3 +1,11 @@
+{% assign device_context_suffix = "device-context" | append_random %}
+{% assign device_context_instance_key = device_context_suffix %}
+{% assign liquid_timezone_id = "liquid-timezone-" | append: device_context_suffix %}
+{% assign liquid_utc_offset_id = "liquid-utc-offset-" | append: device_context_suffix %}
+{% assign js_intl_timezone_id = "js-intl-timezone-" | append: device_context_suffix %}
+{% assign js_timezone_offset_id = "js-timezone-offset-" | append: device_context_suffix %}
+{% assign timezone_consistency_id = "timezone-consistency-status-" | append: device_context_suffix %}
+
 <div class="layout layout--col layout--top p--2">
   <div class="item">
     <div class="meta"></div>
@@ -27,7 +35,7 @@
     <div class="meta"></div>
     <div>
       <span class="label label--small label--underline">user.time_zone_iana (Liquid)</span>
-      <span class="title" id="liquid-timezone">{{ trmnl.user.time_zone_iana }}</span>
+      <span class="title" id="{{ liquid_timezone_id }}">{{ trmnl.user.time_zone_iana }}</span>
     </div>
   </div>
 
@@ -35,7 +43,7 @@
     <div class="meta"></div>
     <div>
       <span class="label label--small label--underline">user.utc_offset (Liquid seconds)</span>
-      <span class="title" id="liquid-utc-offset">{{ trmnl.user.utc_offset }}</span>
+      <span class="title" id="{{ liquid_utc_offset_id }}">{{ trmnl.user.utc_offset }}</span>
     </div>
   </div>
 
@@ -43,7 +51,7 @@
     <div class="meta"></div>
     <div>
       <span class="label label--small label--underline">JS Intl timezone</span>
-      <span class="title" id="js-intl-timezone">loading...</span>
+      <span class="title" id="{{ js_intl_timezone_id }}">loading...</span>
     </div>
   </div>
 
@@ -51,7 +59,7 @@
     <div class="meta"></div>
     <div>
       <span class="label label--small label--underline">JS timezone offset (minutes)</span>
-      <span class="title" id="js-timezone-offset">loading...</span>
+      <span class="title" id="{{ js_timezone_offset_id }}">loading...</span>
     </div>
   </div>
 
@@ -59,7 +67,7 @@
     <div class="meta"></div>
     <div>
       <span class="label label--small label--underline">timezone consistency</span>
-      <span class="title" id="timezone-consistency-status">checking...</span>
+      <span class="title" id="{{ timezone_consistency_id }}">checking...</span>
     </div>
   </div>
 
@@ -79,11 +87,11 @@
 
   <script>
     (function() {
-      var tzElement = document.getElementById('js-intl-timezone');
-      var offsetElement = document.getElementById('js-timezone-offset');
-      var liquidTzElement = document.getElementById('liquid-timezone');
-      var liquidOffsetElement = document.getElementById('liquid-utc-offset');
-      var statusElement = document.getElementById('timezone-consistency-status');
+      var tzElement = document.getElementById({{ js_intl_timezone_id | json }});
+      var offsetElement = document.getElementById({{ js_timezone_offset_id | json }});
+      var liquidTzElement = document.getElementById({{ liquid_timezone_id | json }});
+      var liquidOffsetElement = document.getElementById({{ liquid_utc_offset_id | json }});
+      var statusElement = document.getElementById({{ timezone_consistency_id | json }});
       if (!tzElement || !offsetElement || !liquidTzElement || !liquidOffsetElement || !statusElement) return;
 
       var runtimeTimezone = 'unknown';

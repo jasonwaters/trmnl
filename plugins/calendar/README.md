@@ -252,6 +252,15 @@ calendar/
 
 This is the **FullCalendar** implementation. Other calendar library implementations may be added in the future.
 
+## Mashup Safety Checklist
+
+When this plugin appears more than once in a mashup:
+
+- Use unique per-instance root IDs instead of fixed IDs
+- Keep CSS selectors scoped to those same dynamic IDs
+- Resolve DOM elements with instance-specific IDs in JS
+- Avoid shared global symbols across layout scripts
+
 ## License
 
 See parent repository for license information.

@@ -248,6 +248,15 @@ Toggle event descriptions on or off in Basic List mode.
 - **calendar-webhook** - Node.js script for fetching ICS calendars and POSTing to webhooks
 - **@trmnl/calendar** - FullCalendar-based calendar plugin with month/week views
 
+## Mashup Safety Checklist
+
+When using multiple instances in a mashup:
+
+- Use per-instance IDs for root calendar containers (avoid hardcoded IDs)
+- Keep selectors and any ID-scoped CSS tied to the same dynamic ID
+- Isolate JS in closures to avoid shared-scope collisions
+- Pass instance-specific selectors into shared initializers
+
 ## License
 
 MIT

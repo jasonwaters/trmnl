@@ -144,39 +144,39 @@
     overflow: hidden;
   }
 
-  #calendar-agenda-quad {
+  #{{ agenda_calendar_id }} {
     height: 100vh;
     width: 100%;
     max-width: 100%;
     overflow: hidden;
   }
 
-  #calendar-agenda-quad * {
+  #{{ agenda_calendar_id }} * {
     font-family: 'Roboto Condensed', sans-serif !important;
     font-size: 9px;
     line-height: 1.1;
   }
 
   /* List view - micro */
-  #calendar-agenda-quad .sc-list-event {
+  #{{ agenda_calendar_id }} .sc-list-event {
     border-left: 2px solid black;
     padding: 3px;
     margin-bottom: 2px;
     background-color: white;
   }
 
-  #calendar-agenda-quad .sc-list-event-title {
+  #{{ agenda_calendar_id }} .sc-list-event-title {
     font-weight: 700;
     margin-bottom: 1px;
     font-size: 9px;
   }
 
-  #calendar-agenda-quad .sc-list-event-time {
+  #{{ agenda_calendar_id }} .sc-list-event-time {
     font-size: 8px;
     opacity: 0.8;
   }
 
-  #calendar-agenda-quad .sc-list-date-header {
+  #{{ agenda_calendar_id }} .sc-list-date-header {
     font-weight: 700;
     font-size: 10px;
     text-transform: uppercase;
@@ -186,46 +186,46 @@
   }
 
   /* Hide current time indicator */
-  #calendar-agenda-quad .uc-now-indicator,
-  #calendar-agenda-quad .uc-now-dot,
-  #calendar-agenda-quad .uc-now-line {
+  #{{ agenda_calendar_id }} .uc-now-indicator,
+  #{{ agenda_calendar_id }} .uc-now-dot,
+  #{{ agenda_calendar_id }} .uc-now-line {
     display: none !important;
   }
 
   /* Remove scrollbars */
-  #calendar-agenda-quad .sc-scroller,
-  #calendar-agenda-quad .sc-body,
-  #calendar-agenda-quad .sc-list-view,
-  #calendar-agenda-quad .sc-list-container {
+  #{{ agenda_calendar_id }} .sc-scroller,
+  #{{ agenda_calendar_id }} .sc-body,
+  #{{ agenda_calendar_id }} .sc-list-view,
+  #{{ agenda_calendar_id }} .sc-list-container {
     overflow: hidden !important;
   }
 
   /* Hide scrollbar styles */
-  #calendar-agenda-quad *::-webkit-scrollbar {
+  #{{ agenda_calendar_id }} *::-webkit-scrollbar {
     display: none;
   }
 
-  #calendar-agenda-quad * {
+  #{{ agenda_calendar_id }} * {
     scrollbar-width: none;
   }
 
   /* Force list view to fill height */
-  #calendar-agenda-quad .sc-list-view,
-  #calendar-agenda-quad .sc-view-container,
-  #calendar-agenda-quad .sc-container {
+  #{{ agenda_calendar_id }} .sc-list-view,
+  #{{ agenda_calendar_id }} .sc-view-container,
+  #{{ agenda_calendar_id }} .sc-container {
     height: 100% !important;
     max-height: none !important;
     min-height: 100vh !important;
   }
 
   /* Allow overflow on time columns so overlapping events can render side-by-side */
-  #calendar-agenda-quad .sc-time-col {
+  #{{ agenda_calendar_id }} .sc-time-col {
     overflow: visible !important;
     position: relative !important;
   }
 </style>
 
-<div id="calendar-agenda-quad"></div>
+<div id="{{ agenda_calendar_id }}"></div>
 
 <script>
   document.addEventListener('DOMContentLoaded', function() {
@@ -266,7 +266,7 @@
     );
 
     initializeAgendaCalendar({
-      selector: '#calendar-agenda-quad',
+      selector: {{ "#" | append: agenda_calendar_id | json }},
       viewMode: VIEW_MODE,
       todayDateKey: '{{ agenda_today_local_date }}',
       currentUtcEpoch: currentUtcEpoch,

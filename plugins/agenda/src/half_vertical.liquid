@@ -139,57 +139,57 @@
     overflow: hidden;
   }
 
-  #calendar-agenda-half {
+  #{{ agenda_calendar_id }} {
     height: 100vh;
     width: 100%;
     max-width: 100%;
     overflow: hidden;
   }
 
-  #calendar-agenda-half * {
+  #{{ agenda_calendar_id }} * {
     font-family: 'Roboto Condensed', sans-serif !important;
     font-size: 11px;
     line-height: 1.2;
   }
 
   /* Day view - compact */
-  #calendar-agenda-half .sc-event {
+  #{{ agenda_calendar_id }} .sc-event {
     border-radius: 0 !important;
     overflow: visible !important;
     padding: 2px 3px !important;
   }
 
-  #calendar-agenda-half .sc-event-title {
+  #{{ agenda_calendar_id }} .sc-event-title {
     display: block !important;
     font-size: 10px !important;
     line-height: 1.2 !important;
     overflow: visible !important;
   }
 
-  #calendar-agenda-half .sc-event-time {
+  #{{ agenda_calendar_id }} .sc-event-time {
     font-size: 9px !important;
   }
 
   /* List view - very compact */
-  #calendar-agenda-half .sc-list-event {
+  #{{ agenda_calendar_id }} .sc-list-event {
     border-left: 3px solid black;
     padding: 5px;
     margin-bottom: 2px;
     background-color: white;
   }
 
-  #calendar-agenda-half .sc-list-event-title {
+  #{{ agenda_calendar_id }} .sc-list-event-title {
     font-weight: 700;
     margin-bottom: 2px;
     font-size: 11px;
   }
 
-  #calendar-agenda-half .sc-list-event-time {
+  #{{ agenda_calendar_id }} .sc-list-event-time {
     font-size: 10px;
     opacity: 0.8;
   }
 
-  #calendar-agenda-half .sc-list-date-header {
+  #{{ agenda_calendar_id }} .sc-list-date-header {
     font-weight: 700;
     font-size: 12px;
     text-transform: uppercase;
@@ -199,12 +199,12 @@
   }
 
   /* Time slots - more compact */
-  #calendar-agenda-half .sc-time-slot {
+  #{{ agenda_calendar_id }} .sc-time-slot {
     border: 1px dashed rgba(0, 0, 0, 0.2) !important;
   }
 
   /* Day header */
-  #calendar-agenda-half .sc-header-cell {
+  #{{ agenda_calendar_id }} .sc-header-cell {
     font-family: 'Roboto Condensed', sans-serif !important;
     font-size: 12px;
     font-weight: 700;
@@ -212,63 +212,63 @@
   }
 
   /* Time column */
-  #calendar-agenda-half .sc-time-col {
+  #{{ agenda_calendar_id }} .sc-time-col {
     font-size: 10px;
     font-weight: 700;
   }
 
   /* Reduce hour height for compact view */
-  #calendar-agenda-half {
+  #{{ agenda_calendar_id }} {
     --cal-hour-height: 30px;
   }
 
   /* Hide toolbar */
-  #calendar-agenda-half .sc-toolbar {
+  #{{ agenda_calendar_id }} .sc-toolbar {
     display: none !important;
   }
 
   /* Hide current time indicator */
-  #calendar-agenda-half .uc-now-indicator,
-  #calendar-agenda-half .uc-now-dot,
-  #calendar-agenda-half .uc-now-line {
+  #{{ agenda_calendar_id }} .uc-now-indicator,
+  #{{ agenda_calendar_id }} .uc-now-dot,
+  #{{ agenda_calendar_id }} .uc-now-line {
     display: none !important;
   }
 
   /* Remove scrollbars */
-  #calendar-agenda-half .sc-scroller,
-  #calendar-agenda-half .sc-body,
-  #calendar-agenda-half .sc-list-view,
-  #calendar-agenda-half .sc-list-container {
+  #{{ agenda_calendar_id }} .sc-scroller,
+  #{{ agenda_calendar_id }} .sc-body,
+  #{{ agenda_calendar_id }} .sc-list-view,
+  #{{ agenda_calendar_id }} .sc-list-container {
     overflow: hidden !important;
   }
 
   /* Hide scrollbar styles */
-  #calendar-agenda-half *::-webkit-scrollbar {
+  #{{ agenda_calendar_id }} *::-webkit-scrollbar {
     display: none;
   }
 
-  #calendar-agenda-half * {
+  #{{ agenda_calendar_id }} * {
     scrollbar-width: none;
   }
 
   /* Force day view to fill height */
-  #calendar-agenda-half .sc-day-view,
-  #calendar-agenda-half .sc-list-view,
-  #calendar-agenda-half .sc-view-container,
-  #calendar-agenda-half .sc-container {
+  #{{ agenda_calendar_id }} .sc-day-view,
+  #{{ agenda_calendar_id }} .sc-list-view,
+  #{{ agenda_calendar_id }} .sc-view-container,
+  #{{ agenda_calendar_id }} .sc-container {
     height: 100% !important;
     max-height: none !important;
     min-height: 100vh !important;
   }
 
   /* Allow overflow on time columns so overlapping events can render side-by-side */
-  #calendar-agenda-half .sc-time-col {
+  #{{ agenda_calendar_id }} .sc-time-col {
     overflow: visible !important;
     position: relative !important;
   }
 </style>
 
-<div id="calendar-agenda-half"></div>
+<div id="{{ agenda_calendar_id }}"></div>
 
 <script>
   document.addEventListener('DOMContentLoaded', function() {
@@ -309,7 +309,7 @@
     );
 
     initializeAgendaCalendar({
-      selector: '#calendar-agenda-half',
+      selector: {{ "#" | append: agenda_calendar_id | json }},
       viewMode: VIEW_MODE,
       todayDateKey: '{{ agenda_today_local_date }}',
       currentUtcEpoch: currentUtcEpoch,

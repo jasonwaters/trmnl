@@ -554,7 +554,7 @@
     </div>
   </header>
 
-  <section class="wx-chart" id="wx-chart-half-vertical" data-temps="{{ graph_temps_csv | escape }}" data-times="{{ graph_times_csv | escape }}" data-now-idx="{{ graph_now_idx }}">
+  <section class="wx-chart" id="{{ weather_chart_id }}" data-temps="{{ graph_temps_csv | escape }}" data-times="{{ graph_times_csv | escape }}" data-now-idx="{{ graph_now_idx }}">
     <svg class="wx-chart-svg" viewBox="0 0 540 74" preserveAspectRatio="none" aria-hidden="true"></svg>
   </section>
 
@@ -675,7 +675,7 @@
 
 <script>
 (() => {
-  const chartNode = document.querySelector('#wx-chart-half-vertical');
+  const chartNode = document.querySelector({{ "#" | append: weather_chart_id | json }});
   if (!chartNode) return;
 
   const svg = chartNode.querySelector('.wx-chart-svg');

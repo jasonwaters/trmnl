@@ -1,3 +1,6 @@
+{% assign weather_instance_suffix = "weather" | append_random %}
+{% assign weather_instance_key = weather_instance_suffix %}
+{% assign weather_chart_id = "wx-chart-" | append: weather_instance_suffix %}
 {% assign weather_payload = state | default: data | default: payload | default: template %}
 {% if weather_payload == blank and IDX_0 %}
   {% assign weather_payload = IDX_0 %}

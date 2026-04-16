@@ -15,6 +15,9 @@
 {% assign agenda_now_local_epoch = agenda_now_utc_epoch | plus: effective_utc_offset %}
 {% assign agenda_today_local_date = agenda_now_local_epoch | date: "%Y-%m-%d" %}
 {% assign agenda_today_label = agenda_now_local_epoch | date: "%a, %b %-d" %}
+{% assign agenda_instance_suffix = "agenda" | append_random %}
+{% assign agenda_instance_key = agenda_instance_suffix %}
+{% assign agenda_calendar_id = "calendar-agenda-" | append: agenda_instance_suffix %}
 {% assign agenda_tomorrow_local_epoch = agenda_now_local_epoch | plus: 86400 %}
 {% assign agenda_tomorrow_local_date = agenda_tomorrow_local_epoch | date: "%Y-%m-%d" %}
 {% assign show_event_descriptions_raw = trmnl.plugin_settings.custom_fields_values.show_event_descriptions | default: true | append: '' | downcase %}

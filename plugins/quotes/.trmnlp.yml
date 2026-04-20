@@ -4,7 +4,10 @@ watch:
   - .trmnlp.yml
   - src
 custom_fields:
-  spreadsheet_id: 19hESY6AbY2ZwBph_ndF3zrw9hG__2NLzsbZTMrTlcPk
+  spreadsheet_id: 1234
+  quote_selection_mode: random
+  specific_quote_row: 5
+  sheet_number: 0
   quote_index: 0
   author_index: 1
 variables:

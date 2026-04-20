@@ -1,7 +1,9 @@
 <div class="layout layout--col layout--center">
   <div class="w--full h--full flex flex--col flex--center-y flex--center-x text--center p--2">
     <div class="icon mb--1">
-      <img src="https://raw.githubusercontent.com/nicholaswilde/trmnl-sheet-quote/refs/heads/main/src/img/sheet-quote.svg" class="w--[6cqw] h--[6cqw] portrait:w--[10cqw] portrait:h--[10cqw]" alt="Quote icon">
+      <div class="text--gray-3">
+        {{ quote_icon_markup }}
+      </div>
     </div>
     <span class="value value--small quote-serif" data-value-fit="true" data-value-fit-max-height="64">
       <span id="{{ quote_text_id }}">Loading quote…</span>
@@ -14,12 +16,14 @@
 
 <script type="text/javascript">
   try {
-    window.sheetQuotePlugin.renderRandomQuote({
+    window.sheetQuotePlugin.renderQuote({
       payload: {{ data | default: "" | json }},
       quoteSelector: {{ "#" | append: quote_text_id | json }},
       authorSelector: {{ "#" | append: quote_author_id | json }},
       quoteIndex: {{ trmnl.plugin_settings.custom_fields_values.quote_index | plus: 0 }},
-      authorIndex: {{ trmnl.plugin_settings.custom_fields_values.author_index | plus: 0 }}
+      authorIndex: {{ trmnl.plugin_settings.custom_fields_values.author_index | plus: 0 }},
+      selectionMode: {{ trmnl.plugin_settings.custom_fields_values.quote_selection_mode | default: "random" | json }},
+      specificQuoteRow: {{ trmnl.plugin_settings.custom_fields_values.specific_quote_row | default: 1 | plus: 0 }}
     });
   } catch (error) {
     console.error("Sheet Quote: Critical Error", error);

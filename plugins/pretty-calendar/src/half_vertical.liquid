@@ -37,11 +37,11 @@
       <div class="rounded--full text--center aspect--1/1 h--10 {% if is_today == 'true' %}text--white{% elsif date < current_date %}text--gray-40{% endif %}"{% if is_today == 'true' %} style="background-color:#000;"{% endif %}>
         <div class="value--xsmall pt--1.5 pb--0">{{ day_num }}</div>
 
-        {% if is_today == 'true' %}
+        {% if is_today == 'true' and event_count > 0 %}
           <div class="flex flex--row flex--center-x gap--xsmall" style="position: relative; top: {{ calendar_today_dot_offset_px }}px;">
+            {% for dot in (1..event_count) %}
             <div class="{{ calendar_day_dot_size_class }} rounded--full bg--white"></div>
-            <div class="{{ calendar_day_dot_size_class }} rounded--full bg--white"></div>
-            <div class="{{ calendar_day_dot_size_class }} rounded--full bg--white"></div>
+            {% endfor %}
           </div>
         {% elsif event_count > 0 %}
           <div class="flex flex--row flex--center-x gap--xsmall">

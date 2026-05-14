@@ -1,5 +1,41 @@
 {% assign immich_settings = trmnl.plugin_settings.custom_fields_values %}
 {% assign immich_asset = data[0] %}
+{% assign immich_exclude_png_value = immich_settings.exclude_png | default: 'no' | append: '' | downcase %}
+{% assign immich_require_people_value = immich_settings.require_people | default: 'no' | append: '' | downcase %}
+{% assign immich_exclude_png = false %}
+{% if immich_exclude_png_value == 'yes' or immich_exclude_png_value == 'true' %}
+  {% assign immich_exclude_png = true %}
+{% endif %}
+{% assign immich_require_people = false %}
+{% if immich_require_people_value == 'yes' or immich_require_people_value == 'true' %}
+  {% assign immich_require_people = true %}
+{% endif %}
+{% if immich_exclude_png or immich_require_people %}
+  {% for candidate_asset in data %}
+    {% assign candidate_mime_type = candidate_asset.originalMimeType | default: '' | downcase %}
+    {% assign candidate_file_name = candidate_asset.originalFileName | default: candidate_asset.deviceAssetId | default: '' | downcase %}
+    {% assign candidate_is_png = false %}
+    {% if candidate_mime_type == 'image/png' or candidate_file_name contains '.png' %}
+      {% assign candidate_is_png = true %}
+    {% endif %}
+    {% assign candidate_has_people = false %}
+    {% if candidate_asset.people and candidate_asset.people.size > 0 %}
+      {% assign candidate_has_people = true %}
+    {% endif %}
+    {% assign candidate_matches_png_filter = true %}
+    {% if immich_exclude_png and candidate_is_png %}
+      {% assign candidate_matches_png_filter = false %}
+    {% endif %}
+    {% assign candidate_matches_people_filter = true %}
+    {% if immich_require_people and candidate_has_people == false %}
+      {% assign candidate_matches_people_filter = false %}
+    {% endif %}
+    {% if candidate_matches_png_filter and candidate_matches_people_filter %}
+      {% assign immich_asset = candidate_asset %}
+      {% break %}
+    {% endif %}
+  {% endfor %}
+{% endif %}
 {% assign immich_original_path_parts = immich_asset.originalPath | default: '' | split: '/' %}
 {% assign immich_file_name = immich_asset.originalFileName | default: immich_original_path_parts.last | default: immich_asset.deviceAssetId | default: 'Immich image' %}
 {% assign immich_taken_at = immich_asset.localDateTime | default: immich_asset.fileCreatedAt | default: '' %}

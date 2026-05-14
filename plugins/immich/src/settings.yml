@@ -1,0 +1,58 @@
+name: 'Immich Random Image'
+no_screen_padding: 'no'
+dark_mode: 'no'
+strategy: polling
+polling_verb: post
+polling_url: '{{http_status}}{{ immich_url }}/api/search/random?apiKey={{ api_key }}'
+polling_headers: content-type=application/json
+polling_body: "{% assign albums = album_ids | split: \",\" | join: '\", \"' | default: empty %}\r\n{\r\n\t\"size\": 1, \r\n\t\"type\": \"IMAGE\", \r\n\t\"withDeleted\": false\r\n{%- if albums != empty -%}\r\n    ,\r\n    \"albumIds\": [\"{{ albums }}\"]\r\n{% endif -%}\r\n}"
+refresh_interval: 30
+id: '296218'
+custom_fields:
+  -
+    keyname: doesnt_matter
+    name: 'About This Plugin'
+    category: 'images,personal'
+    field_type: author_bio
+    description: 'Immich Random Image will randomly retrieve an image from an immich server of choice (optionally filtering by a set of album ids if so desired) for display'
+  -
+    keyname: immich_url
+    field_type: string
+    name: 'Immich URL'
+    description: 'URL of the immich server (without http/https)'
+    placeholder: someurl.com
+  -
+    keyname: http_status
+    field_type: select
+    name: 'Use http or https'
+    description: 'Determines if we use http or https to hit the server'
+    options:
+      -
+        'http://': 'http://'
+      -
+        'https://': 'https://'
+    default: 'https://'
+  -
+    keyname: api_key
+    field_type: string
+    name: 'Immich API Key'
+    description: 'Immich API Key, must have asset.view and asset.read permissions'
+    placeholder: apikey
+  -
+    keyname: album_ids
+    optional: true
+    field_type: multi_string
+    name: 'Album Ids'
+    description: 'List of album ids to pull images from'
+    placeholder: id_xxx
+  -
+    keyname: show_title_bar
+    field_type: select
+    name: 'Show Title Bar'
+    description: 'Show or hide the title bar below the image'
+    options:
+      -
+        'yes': 'yes'
+      -
+        'no': 'no'
+    default: 'yes'

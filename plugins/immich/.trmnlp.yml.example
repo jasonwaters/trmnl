@@ -1,0 +1,17 @@
+# TRMNLP configuration
+---
+watch:
+  - .trmnlp.yml
+  - src
+custom_fields:
+  http_status: https://
+  show_title_bar: no
+  immich_url: immich.example.com
+  api_key: replace-with-your-immich-api-key
+variables:
+  trmnl:
+    user:
+      locale: en-US
+      time_zone: UTC
+      time_zone_iana: UTC
+      utc_offset: 0

@@ -3,9 +3,9 @@ no_screen_padding: 'no'
 dark_mode: 'no'
 strategy: polling
 polling_verb: post
-polling_url: '{{http_status}}{{ immich_url }}/api/search/random?apiKey={{ api_key }}'
+polling_url: '{{http_status}}{{ immich_url }}/api/search/random?apiKey={{ api_key }}&mashupInstance={{ "immich" | append_random }}'
 polling_headers: content-type=application/json
-polling_body: "{% assign albums = album_ids | split: \",\" | join: '\", \"' | default: empty %}\r\n{% assign require_people_value = require_people | default: 'no' | append: '' | downcase %}\r\n{% assign require_exif_value = require_exif | default: 'no' | append: '' | downcase %}\r\n{% assign exclude_png_value = exclude_png | default: 'no' | append: '' | downcase %}\r\n{% assign random_asset_count = 1 %}\r\n{% if require_people_value == 'yes' or require_people_value == 'true' or exclude_png_value == 'yes' or exclude_png_value == 'true' %}{% assign random_asset_count = 10 %}{% endif %}\r\n{\r\n\t\"size\": {{ random_asset_count }}, \r\n\t\"type\": \"IMAGE\", \r\n\t\"withDeleted\": false\r\n{%- if albums != empty -%}\r\n    ,\r\n    \"albumIds\": [\"{{ albums }}\"]\r\n{% endif -%}\r\n{%- if require_people_value == 'yes' or require_people_value == 'true' -%}\r\n    ,\r\n    \"withPeople\": true\r\n{% endif -%}\r\n{%- if require_exif_value == 'yes' or require_exif_value == 'true' -%}\r\n    ,\r\n    \"withExif\": true\r\n{% endif -%}\r\n}"
+polling_body: "{% assign albums = album_ids | split: \",\" | join: '\", \"' | default: empty %}\r\n{% assign favorites_only_value = favorites_only | default: 'no' | append: '' | downcase %}\r\n{\r\n\t\"size\": 1, \r\n\t\"type\": \"IMAGE\", \r\n\t\"withDeleted\": false\r\n{%- if albums != empty -%}\r\n    ,\r\n    \"albumIds\": [\"{{ albums }}\"]\r\n{% endif -%}\r\n{%- if favorites_only_value == 'yes' or favorites_only_value == 'true' -%}\r\n    ,\r\n    \"isFavorite\": true\r\n{% endif -%}\r\n}"
 refresh_interval: 30
 id: '296218'
 custom_fields:
@@ -46,32 +46,10 @@ custom_fields:
     description: 'List of album ids to pull images from'
     placeholder: id_xxx
   -
-    keyname: require_people
+    keyname: favorites_only
     field_type: select
-    name: 'Only Images With People'
-    description: 'Requests a small random batch and displays the first asset with detected people or faces'
-    options:
-      -
-        'yes': 'yes'
-      -
-        'no': 'no'
-    default: 'no'
-  -
-    keyname: require_exif
-    field_type: select
-    name: 'Require EXIF Metadata'
-    description: 'Helps reduce screenshots by only returning images with EXIF metadata'
-    options:
-      -
-        'yes': 'yes'
-      -
-        'no': 'no'
-    default: 'no'
-  -
-    keyname: exclude_png
-    field_type: select
-    name: 'Exclude PNG Images'
-    description: 'Requests a small random batch and displays the first non-PNG asset'
+    name: 'Favorites Only'
+    description: 'Only return random images marked as favorites in Immich'
     options:
       -
         'yes': 'yes'

@@ -6,9 +6,7 @@ watch:
 custom_fields:
   http_status: https://
   show_title_bar: no
-  require_people: no
-  require_exif: no
-  exclude_png: no
+  favorites_only: no
   immich_url: immich.example.com
   api_key: replace-with-your-immich-api-key
 variables:

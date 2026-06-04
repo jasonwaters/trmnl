@@ -50,16 +50,7 @@
 {% endcapture %}
 {% assign hero_icon_data = hero_icon_svg | strip_newlines | strip | base64_encode %}
 
-{% if has_state == false %}
-<div class="layout layout--col p--small">
-  <div class="outline rounded p--small">
-    <div class="label">Weather</div>
-    <div class="value mt--1.5">No data</div>
-    <div class="label mt--1.5">Open-Meteo payload missing.</div>
-  </div>
-</div>
-{% else %}
-<div class="wx-card wx-card--half-vertical {{ theme_class }}">
+<div class="wx-card wx-card--half-vertical {{ theme_class }}{% if has_state == false %} is-unavailable{% endif %}">
   <style>
     .wx-card {
       --bg: #000000;
@@ -83,6 +74,10 @@
       font-family: "Avenir Next", "Helvetica Neue", sans-serif;
       font-variant-numeric: tabular-nums;
       container-type: size;
+    }
+
+    .wx-card.is-unavailable {
+      grid-template-rows: auto minmax(0, 1fr);
     }
 
     .wx-card.is-light {
@@ -289,6 +284,19 @@
       text-al\69gn: center;
       max-width: 11ch;
       text-wrap: balance;
+    }
+
+    .wx-unavailable {
+      display: grid;
+      place-items: center;
+      min-height: 0;
+      text-al\69gn: center;
+    }
+
+    .wx-unavailable-message {
+      font: 600 clamp(21px, 2.4vw, 29px)/0.94 "Avenir Next Condensed", "Avenir Next", "Helvetica Neue", sans-serif;
+      letter-spacing: 0.14em;
+      max-width: 90%;
     }
 
     .wx-summary {
@@ -548,12 +556,19 @@
       <div class="wx-kicker">{{ header_label }}</div>
       <div class="wx-place">{{ location_name }}</div>
     </div>
+    {% if has_state %}
     <div class="wx-updated">
       <div class="wx-updated-label">Updated</div>
       <div class="wx-updated-time">{{ asof_time }}</div>
     </div>
+    {% endif %}
   </header>
 
+  {% if has_state == false %}
+  <section class="wx-unavailable">
+    <div class="wx-unavailable-message">Weather currently unavailable</div>
+  </section>
+  {% else %}
   <section class="wx-chart" id="{{ weather_chart_id }}" data-temps="{{ graph_temps_csv | escape }}" data-times="{{ graph_times_csv | escape }}" data-now-idx="{{ graph_now_idx }}">
     <svg class="wx-chart-svg" viewBox="0 0 540 74" preserveAspectRatio="none" aria-hidden="true"></svg>
   </section>
@@ -671,8 +686,10 @@
       {% endfor %}
     </div>
   </section>
+  {% endif %}
 </div>
 
+{% if has_state %}
 <script>
 (() => {
   const chartNode = document.querySelector({{ "#" | append: weather_chart_id | json }});

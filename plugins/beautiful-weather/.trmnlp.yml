@@ -8,6 +8,6 @@ custom_fields:
   latitude: '40.242067851432246'
   longitude: '-74.03059810259519'
   temperature_unit: fahrenheit
-  force_light_mode: false
+  force_light_mode: true
 variables:
   trmnl: {}

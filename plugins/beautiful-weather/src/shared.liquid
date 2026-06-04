@@ -84,11 +84,24 @@
 {% assign hourly_is_day = wx_hourly.is_day | default: '' %}
 {% assign hourly_count = hourly_times | size %}
 
-{% assign has_state = false %}
-{% if wx_current %}
-  {% assign has_state = true %}
+{% assign weather_error_raw = weather_payload.error | default: false | append: '' | downcase %}
+{% assign has_weather_error = false %}
+{% if weather_error_raw == 'true' %}
+  {% assign has_weather_error = true %}
 {% endif %}
-{% if has_state == false and weather_payload != blank %}
+
+{% assign has_required_current = false %}
+{% if wx_current and wx_current.time != blank and wx_current.temperature_2m != blank and wx_current.apparent_temperature != blank and wx_current.weather_code != blank and wx_current.is_day != blank and wx_current.relative_humidity_2m != blank and wx_current.wind_speed_10m != blank %}
+  {% assign has_required_current = true %}
+{% endif %}
+
+{% assign has_required_hourly = false %}
+{% if wx_hourly and hourly_count > 0 and hourly_temps != blank and hourly_pops != blank and hourly_codes != blank and hourly_is_day != blank %}
+  {% assign has_required_hourly = true %}
+{% endif %}
+
+{% assign has_state = false %}
+{% if has_weather_error == false and has_required_current and has_required_hourly %}
   {% assign has_state = true %}
 {% endif %}
 

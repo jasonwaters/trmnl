@@ -105,6 +105,12 @@
   {% assign has_state = true %}
 {% endif %}
 
+{% if has_state == false %}
+<script>
+  window.TRMNL_SKIP_DISPLAY = true;
+</script>
+{% endif %}
+
 {% assign now_index = 0 %}
 {% assign now_time_raw = wx_current.time | default: '' %}
 {% assign now_code = wx_current.weather_code | default: 0 | round %}

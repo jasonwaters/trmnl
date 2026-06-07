@@ -136,6 +136,7 @@ TRMNL Calendar Plugin - Shared Logic
 
 {% comment %} Build 14 days starting from week start {% endcomment %}
 {% assign days_data_string = "" %}
+{% assign current_date_event_count = 0 %}
 
 {% for i in (0..13) %}
   {% assign day_offset = i | times: 86400 %}
@@ -174,6 +175,7 @@ TRMNL Calendar Plugin - Shared Logic
   {% assign is_today = "false" %}
   {% if check_date_str == current_date %}
     {% assign is_today = "true" %}
+    {% assign current_date_event_count = event_count %}
   {% endif %}
   
   {% comment %} Build data string {% endcomment %}
@@ -187,3 +189,9 @@ TRMNL Calendar Plugin - Shared Logic
 {% endfor %}
 
 {% assign days_data = days_data_string | split: "||" %}
+
+{% if current_date_event_count == 0 %}
+<script>
+  window.TRMNL_SKIP_DISPLAY = true;
+</script>
+{% endif %}

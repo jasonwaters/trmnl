@@ -36,42 +36,47 @@
   {% assign window_end_date = window_end_epoch | date: "%Y-%m-%d" %}
   {% assign last_rendered_date = "" %}
   {% assign displayed_count = 0 %}
-  {% assign sources = events | map: "source" | uniq %}
+  {% assign sources = "" %}
+  {% if agenda_has_events %}
+    {% assign sources = agenda_events | map: "source" | uniq %}
+  {% endif %}
   
-  {% for event in events %}
+  {% if agenda_has_events %}
+  {% for event in agenda_events %}
         {% if event.start_date > window_end_date %}
           {% break %}
         {% endif %}
         {% assign event_end_epoch = event.end | date: "%s" | plus: 0 %}
-        {% if event_end_epoch <= agenda_now_utc_epoch %}
-          {% continue %}
+        {% assign should_render_event = false %}
+        {% if event_end_epoch > agenda_now_utc_epoch %}
+          {% assign overlaps_window = false %}
+          {% if event.all_day %}
+            {% if event.end_date > window_start_date and event.start_date <= window_end_date %}
+              {% assign overlaps_window = true %}
+            {% endif %}
+          {% else %}
+            {% if event.end_date >= window_start_date and event.start_date <= window_end_date %}
+              {% assign overlaps_window = true %}
+            {% endif %}
+          {% endif %}
+
+          {% if overlaps_window %}
+            {% assign display_date = event.start_date %}
+            {% if event.start_date < window_start_date %}
+              {% assign display_date = window_start_date %}
+            {% endif %}
+            {% assign displayed_count = displayed_count | plus: 1 %}
+            {% if displayed_count > 4 %}
+              {% break %}
+            {% endif %}
+            {% if display_date != last_rendered_date %}
+              {% assign last_rendered_date = display_date %}
+              <span class="{{ agenda_label_class }}">{{ display_date | date: "%a, %b %-d" }}</span>
+            {% endif %}
+            {% assign should_render_event = true %}
+          {% endif %}
         {% endif %}
-        {% assign overlaps_window = false %}
-        {% if event.all_day %}
-          {% if event.end_date > window_start_date and event.start_date <= window_end_date %}
-            {% assign overlaps_window = true %}
-          {% endif %}
-        {% else %}
-          {% if event.end_date >= window_start_date and event.start_date <= window_end_date %}
-            {% assign overlaps_window = true %}
-          {% endif %}
-        {% endif %}
-        {% if overlaps_window %}
-          {% assign display_date = event.start_date %}
-          {% if event.start_date < window_start_date %}
-            {% assign display_date = window_start_date %}
-          {% endif %}
-          {% assign displayed_count = displayed_count | plus: 1 %}
-          {% if displayed_count > 4 %}
-            {% break %}
-          {% endif %}
-          {% if display_date != last_rendered_date %}
-            {% assign last_rendered_date = display_date %}
-            <span class="{{ agenda_label_class }}">{{ display_date | date: "%a, %b %-d" }}</span>
-          {% endif %}
-        {% else %}
-          {% continue %}
-        {% endif %}
+        {% if should_render_event %}
         {% assign source_index = 0 %}
         {% for source in sources %}
           {% if source == event.source %}
@@ -103,7 +108,9 @@
             </div>
           </div>
         </div>
+        {% endif %}
   {% endfor %}
+  {% endif %}
   
   {% if displayed_count == 0 %}
     <div class="item agenda-item-horizontal">
@@ -277,7 +284,8 @@
     var currentUtcEpoch = {{ agenda_now_utc_epoch }};
 
     var eventsData = [
-      {% for event in events %}
+      {% if agenda_has_events %}
+      {% for event in agenda_events %}
       {% assign start_local_epoch = event.start | date: "%s" | plus: effective_utc_offset %}
       {% assign end_local_epoch = event.end | date: "%s" | plus: effective_utc_offset %}
       buildAgendaEvent({
@@ -299,6 +307,7 @@
         source: '{{ event.source | default: "default" }}'
       }){% unless forloop.last %},{% endunless %}
       {% endfor %}
+      {% endif %}
     ];
     applyAgendaSourceColors(eventsData);
 

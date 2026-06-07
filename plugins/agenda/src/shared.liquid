@@ -1,4 +1,25 @@
 {% comment %} Timezone-safe shared date context for agenda plugin {% endcomment %}
+{% assign agenda_payload = state | default: data | default: payload | default: template %}
+{% if agenda_payload == blank and IDX_0 %}
+  {% assign agenda_payload = IDX_0 %}
+{% endif %}
+{% assign agenda_events = "" %}
+{% assign agenda_has_events = false %}
+{% assign agenda_events_size = 0 %}
+{% if events %}
+  {% assign agenda_events_size = events | size %}
+{% endif %}
+{% if agenda_events_size > 0 %}
+  {% assign agenda_events = events %}
+  {% assign agenda_has_events = true %}
+{% elsif agenda_payload and agenda_payload.events %}
+  {% assign agenda_payload_events_size = agenda_payload.events | size %}
+  {% if agenda_payload_events_size > 0 %}
+  {% assign agenda_events = agenda_payload.events %}
+  {% assign agenda_has_events = true %}
+  {% endif %}
+{% endif %}
+
 {% assign raw_utc_offset = trmnl.user.utc_offset | plus: 0 %}
 {% assign utc_offset = raw_utc_offset %}
 {% if raw_utc_offset != 0 %}
@@ -39,26 +60,29 @@
 {% endif %}
 
 {% assign agenda_day_event_count = 0 %}
-{% if agenda_view_mode == 'day' %}
-  {% for event in events %}
-    {% assign event_end_epoch = event.end | date: "%s" | plus: 0 %}
-    {% if event_end_epoch <= agenda_now_utc_epoch %}
-      {% continue %}
-    {% endif %}
-
-    {% assign overlaps_today = false %}
-    {% if event.all_day %}
-      {% if event.end_date > agenda_today_local_date and event.start_date <= agenda_today_local_date %}
-        {% assign overlaps_today = true %}
-      {% endif %}
+{% if agenda_view_mode == 'day' and agenda_has_events %}
+  {% for event in agenda_events %}
+    {% if event and event.end != blank %}
+      {% assign event_end_epoch = event.end | date: "%s" | plus: 0 %}
     {% else %}
-      {% if event.end_date >= agenda_today_local_date and event.start_date <= agenda_today_local_date %}
-        {% assign overlaps_today = true %}
-      {% endif %}
+      {% assign event_end_epoch = 0 %}
     {% endif %}
 
-    {% if overlaps_today %}
-      {% assign agenda_day_event_count = agenda_day_event_count | plus: 1 %}
+    {% if event and event.end != blank and event.start_date != blank and event.end_date != blank and event_end_epoch > agenda_now_utc_epoch %}
+      {% assign overlaps_today = false %}
+      {% if event.all_day %}
+        {% if event.end_date > agenda_today_local_date and event.start_date <= agenda_today_local_date %}
+          {% assign overlaps_today = true %}
+        {% endif %}
+      {% else %}
+        {% if event.end_date >= agenda_today_local_date and event.start_date <= agenda_today_local_date %}
+          {% assign overlaps_today = true %}
+        {% endif %}
+      {% endif %}
+
+      {% if overlaps_today %}
+        {% assign agenda_day_event_count = agenda_day_event_count | plus: 1 %}
+      {% endif %}
     {% endif %}
   {% endfor %}
 {% endif %}

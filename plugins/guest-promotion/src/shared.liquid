@@ -1,0 +1,232 @@
+{% comment %}
+  Guest Promotion - shared context.
+
+  Renders a return-stay offer entirely from plugin settings (no external data):
+  a big discount headline, a promo code, and a QR code that opens the booking URL.
+  The QR is generated at render time by paulmillr/qr (0-dependency, emitted as
+  SVG) loaded from a pinned, immutable jsDelivr version URL. The module runs in
+  its own scope and every DOM id is per-instance, so the plugin is mashup-safe.
+{% endcomment %}
+
+{% comment %} ---------- Settings ---------- {% endcomment %}
+{% assign gp_discount = trmnl.plugin_settings.custom_fields_values.discount_amount | default: "10%" | strip %}
+{% assign gp_promo_code = trmnl.plugin_settings.custom_fields_values.promo_code | default: "RADMX2P4V" | strip %}
+
+{% comment %} Booking URL: validate and force HTTPS (secure-communication rule).
+  The value is the operator's own config; it is emitted only into an HTML data
+  attribute (escaped) and read back in JS, never concatenated into a script. {% endcomment %}
+{% assign gp_booking_url = trmnl.plugin_settings.custom_fields_values.booking_url | default: "https://radretreat.com" | strip %}
+{% unless gp_booking_url contains "://" %}
+  {% assign gp_booking_url = "https://" | append: gp_booking_url %}
+{% endunless %}
+{% if gp_booking_url contains "http://" %}
+  {% assign gp_booking_url = gp_booking_url | replace: "http://", "https://" %}
+{% endif %}
+
+{% comment %} Title bar toggle. Select is string-backed, so accept both string
+  ("false"/"no") and boolean forms; default to showing it. {% endcomment %}
+{% assign gp_show_title_bar_raw = trmnl.plugin_settings.custom_fields_values.show_title_bar | default: "true" %}
+{% assign gp_show_title_bar = true %}
+{% if gp_show_title_bar_raw == "false" or gp_show_title_bar_raw == false or gp_show_title_bar_raw == "no" %}
+  {% assign gp_show_title_bar = false %}
+{% endif %}
+
+{% assign gp_site_name = "radretreat.com" %}
+
+{% comment %} ---------- Derived copy ---------- {% endcomment %}
+{% assign gp_offer = gp_discount | append: " OFF" %}
+
+{% comment %} ---------- Mashup-safe per-instance ids (see AGENTS.md) ---------- {% endcomment %}
+{% assign gp_instance_suffix = "gp" | append_random %}
+{% assign gp_qr_id = "gp-qr-" | append: gp_instance_suffix %}
+
+{% comment %}
+  ---------- Brand styling (radretreat.com) ----------
+  Layout uses TRMNL framework classes; this block only adds brand typography and
+  a few editorial accents the framework cannot express (letter-spacing, brand
+  fonts, coupon outline). Pure black/white for crisp 1-bit / 2-bit e-ink output.
+{% endcomment %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Nunito+Sans:ital,opsz,wght@0,6..12,400;0,6..12,600;0,6..12,700&display=swap" rel="stylesheet">
+
+<style>
+  .gp-stage { font-family: "Nunito Sans", sans-serif; color: #000; }
+
+  .gp-frame { border: 2px solid #000; padding: 28px 36px; }
+
+  .gp-eyebrow {
+    font-family: "Nunito Sans", sans-serif;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.32em;
+    text-indent: 0.32em;
+    font-size: 18px;
+    line-height: 1.2;
+    color: #000;
+  }
+
+  .gp-offer {
+    display: block;
+    font-family: "Bricolage Grotesque", "Nunito Sans", sans-serif;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.01em;
+    line-height: 0.92;
+    font-size: 78px;
+    /* Same 1-bit hardening as guest-welcome: lock optical sizing and fatten
+       glyphs a hair so anti-aliased edges threshold to solid black. */
+    font-optical-sizing: none;
+    -webkit-text-stroke: 0.6px #000;
+    color: #000;
+  }
+
+  .gp-subline {
+    font-family: "Nunito Sans", sans-serif;
+    font-weight: 600;
+    font-size: 20px;
+    letter-spacing: 0.02em;
+    color: #000;
+  }
+
+  .gp-rule { width: 120px; height: 0; border: 0; border-top: 3px solid #000; margin: 4px auto; }
+
+  .gp-codelabel {
+    font-family: "Nunito Sans", sans-serif;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.26em;
+    text-indent: 0.26em;
+    font-size: 13px;
+    color: #000;
+  }
+
+  .gp-code {
+    display: inline-block;
+    font-family: "Bricolage Grotesque", "Nunito Sans", sans-serif;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    text-indent: 0.16em;
+    font-size: 32px;
+    line-height: 1;
+    padding: 10px 20px;
+    /* Coupon outline: straight dashed edges stay crisp on e-paper. */
+    border: 2px dashed #000;
+    border-radius: 6px;
+    color: #000;
+  }
+
+  /* QR is rendered as an SVG; crisp-edges keeps module borders sharp on e-ink. */
+  .gp-qr { line-height: 0; }
+  .gp-qr svg {
+    display: block;
+    shape-rendering: crispEdges;
+  }
+
+  /* ---------- Coupon (full layout) ----------
+     Two-tone tear-off: solid black offer panel + white QR stub, divided by a
+     perforation. Solid fills threshold cleanly on 1-bit/2-bit e-ink. */
+  .gp-coupon {
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    gap: 0;
+    border: 2px solid #000;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .gp-coupon-dark {
+    flex: 1.15 1 0;
+    background: #000;
+    color: #fff;
+    padding: 30px 34px;
+    /* Perforated tear line between the two panels. */
+    border-right: 3px dashed #fff;
+  }
+  .gp-coupon-light {
+    flex: 1 1 0;
+    background: #fff;
+    color: #000;
+    padding: 24px 28px;
+  }
+  /* Reverse the type out of the black panel (mirror the 1-bit hardening). */
+  .gp-coupon-dark .gp-eyebrow,
+  .gp-coupon-dark .gp-subline,
+  .gp-coupon-dark .gp-codelabel { color: #fff; }
+  .gp-coupon-dark .gp-offer { color: #fff; -webkit-text-stroke: 0.6px #fff; }
+  .gp-coupon-dark .gp-code { color: #fff; border-color: #fff; }
+
+  .gp-qrcap {
+    font-family: "Nunito Sans", sans-serif;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    text-indent: 0.2em;
+    font-size: 12px;
+    margin-top: 8px;
+    color: #000;
+  }
+
+  .gp-titlebar .title {
+    font-family: "Nunito Sans", sans-serif !important;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: lowercase;
+  }
+
+  /* Narrow tier (half_vertical): tighter so the stack + QR fit one panel */
+  .gp-narrow .gp-frame { padding: 18px 20px; }
+  .gp-narrow .gp-eyebrow { font-size: 15px; letter-spacing: 0.18em; text-indent: 0.18em; }
+  .gp-narrow .gp-offer { font-size: 50px; }
+  .gp-narrow .gp-code { font-size: 24px; padding: 8px 16px; }
+
+  /* Compact tier (half_horizontal, quadrant) */
+  .gp-compact .gp-frame { padding: 14px 18px; }
+  .gp-compact .gp-eyebrow { font-size: 11px; letter-spacing: 0.24em; text-indent: 0.24em; }
+  .gp-compact .gp-offer { font-size: 40px; line-height: 0.95; }
+  .gp-compact .gp-subline { font-size: 14px; }
+  .gp-compact .gp-rule { width: 72px; border-top-width: 2px; }
+  .gp-compact .gp-codelabel { font-size: 10px; letter-spacing: 0.2em; text-indent: 0.2em; }
+  .gp-compact .gp-code { font-size: 20px; padding: 6px 12px; letter-spacing: 0.12em; text-indent: 0.12em; }
+  .gp-compact .gp-qrcap { font-size: 10px; margin-top: 5px; }
+</style>
+
+{% comment %}
+  ---------- QR generation (paulmillr/qr, pinned) ----------
+  Generated at render time as an SVG (crisp vectors on e-ink) by the 0-dependency,
+  auditable qr library: https://github.com/paulmillr/qr. Loaded from a pinned,
+  immutable jsDelivr version URL (the published index.min.js artifact, not the
+  dynamically-generated +esm bundle). The module runs in its own scope and targets
+  a per-instance id, so it is mashup-safe. The booking URL is read from the escaped
+  data-url attribute, never concatenated into this script.
+{% endcomment %}
+<script type="module">
+  import encodeQR from "https://cdn.jsdelivr.net/npm/qr@0.6.0/index.min.js";
+
+  (function () {
+    var el = document.getElementById("{{ gp_qr_id }}");
+    if (!el || el.getAttribute("data-rendered")) { return; }
+
+    var url = el.getAttribute("data-url") || "";
+    if (url === "") { return; }
+    var size = parseInt(el.getAttribute("data-size"), 10) || 160;
+
+    try {
+      var svg = encodeQR(url, "svg", { ecc: "medium", border: 1 });
+      if (typeof svg === "string") {
+        el.innerHTML = svg;
+      } else if (svg && svg.nodeType) {
+        el.appendChild(svg);
+      }
+      var node = el.querySelector("svg");
+      if (node) {
+        node.setAttribute("width", size);
+        node.setAttribute("height", size);
+      }
+      el.setAttribute("data-rendered", "1");
+    } catch (e) {
+      /* Leave the caption/code visible if generation fails. */
+    }
+  })();
+</script>

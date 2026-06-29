@@ -1,0 +1,38 @@
+name: 'Guest Promotion'
+no_screen_padding: 'no'
+dark_mode: 'no'
+strategy: static
+refresh_interval: 60
+id: '172736'
+framework_version: 3.1.0
+custom_fields:
+- keyname: author_bio
+  field_type: author_bio
+  name: About This Plugin
+  description: Maintained by Jason Waters. A return-stay promotion screen for guests at The Rad Retreat at Desert Color. Shows a discount offer, a promo code, and a scannable QR code that opens the booking page. Everything is configurable; no external data source is required.
+  category: personal,travel
+  github_url: https://github.com/jasonwaters/trmnl
+  learn_more_url: https://radretreat.com
+- keyname: discount_amount
+  field_type: string
+  name: Discount
+  default: 10%
+  help_text: 'How much off the next stay, shown big as "<value> OFF". Examples: 10%, $100, 2 nights.'
+- keyname: promo_code
+  field_type: string
+  name: Promo Code
+  default: RADMX2P4V
+  help_text: The code guests enter at checkout to claim the discount.
+- keyname: booking_url
+  field_type: string
+  name: Booking URL
+  default: https://radretreat.com
+  help_text: Where the QR code sends guests to book. Must start with https://.
+- keyname: show_title_bar
+  field_type: select
+  name: Title Bar
+  default: 'true'
+  options:
+  - Show "radretreat.com" title bar: 'true'
+  - Hide title bar: 'false'
+  help_text: Toggle the bottom title bar on or off.

@@ -1,0 +1,16 @@
+<div class="layout layout--col layout--center gp-stage gp-compact w--full h--full p--1">
+  <div class="gp-frame flex flex--row flex--center-y flex--center-x gap--large w--full h--full">
+    <div class="flex flex--col flex--center-x text--center gap--small">
+      <span class="gp-offer">{{ gp_offer }}</span>
+      <span class="gp-code">{{ gp_promo_code }}</span>
+    </div>
+
+    <div class="gp-qr" id="{{ gp_qr_id }}" data-url="{{ gp_booking_url | escape }}" data-size="96"></div>
+  </div>
+</div>
+
+{% if gp_show_title_bar %}
+<div class="title_bar gp-titlebar">
+  <span class="title">{{ gp_site_name }}</span>
+</div>
+{% endif %}

@@ -1,0 +1,20 @@
+# TRMNLP configuration
+---
+watch:
+  - .trmnlp.yml
+  - src
+
+# values of custom fields (defined in src/settings.yml)
+custom_fields:
+  discount_amount: '10%'
+  promo_code: RADMX2P4V
+  booking_url: https://radretreat.com
+  show_title_bar: 'true'
+
+# override variables
+variables:
+  trmnl:
+    user:
+      locale: en-US
+      time_zone: America/Denver
+      time_zone_iana: America/Denver

@@ -1,0 +1,140 @@
+{% comment %}
+  Guest Welcome - shared context.
+
+  Picks the guest to feature from the reservation smart-window, derives a
+  friendly greeting name, and formats the stay dates (date-only, no times).
+  Pure Liquid: no JavaScript, no DOM IDs, so it is mashup-safe by construction.
+{% endcomment %}
+
+{% comment %} A real newline used to split multi-line reservation descriptions. {% endcomment %}
+{% capture gw_newline %}
+{% endcapture %}
+
+{% comment %} ---------- Resolve the reservation list from the webhook payload ---------- {% endcomment %}
+{% assign gw_payload = state | default: data | default: payload | default: template %}
+{% if gw_payload == blank and IDX_0 %}
+  {% assign gw_payload = IDX_0 %}
+{% endif %}
+{% assign gw_events = "" %}
+{% assign gw_events_size = 0 %}
+{% if events %}
+  {% assign gw_events_size = events | size %}
+{% endif %}
+{% if gw_events_size > 0 %}
+  {% assign gw_events = events %}
+{% elsif gw_payload and gw_payload.events %}
+  {% assign gw_payload_events_size = gw_payload.events | size %}
+  {% if gw_payload_events_size > 0 %}
+    {% assign gw_events = gw_payload.events %}
+    {% assign gw_events_size = gw_payload_events_size %}
+  {% endif %}
+{% endif %}
+
+{% comment %} ---------- Timezone-safe "today" (see AGENTS.md offset pattern) ---------- {% endcomment %}
+{% assign gw_raw_utc_offset = trmnl.user.utc_offset | plus: 0 %}
+{% assign gw_utc_offset = gw_raw_utc_offset %}
+{% if gw_raw_utc_offset != 0 %}
+  {% assign gw_abs_utc_offset = gw_raw_utc_offset | abs %}
+  {% if gw_abs_utc_offset <= 24 %}
+    {% assign gw_utc_offset = gw_raw_utc_offset | times: 3600 %}
+  {% elsif gw_abs_utc_offset <= 840 %}
+    {% assign gw_utc_offset = gw_raw_utc_offset | times: 60 %}
+  {% endif %}
+{% endif %}
+{% assign effective_utc_offset = gw_utc_offset %}
+{% assign gw_now_utc_epoch = trmnl.system.timestamp_utc | plus: 0 %}
+{% if gw_now_utc_epoch == 0 %}
+  {% assign gw_now_utc_epoch = "now" | date: "%s" | plus: 0 %}
+{% endif %}
+{% assign gw_now_local_epoch = gw_now_utc_epoch | plus: effective_utc_offset %}
+{% assign gw_today_local_date = gw_now_local_epoch | date: "%Y-%m-%d" %}
+
+{% comment %} ---------- Settings ---------- {% endcomment %}
+{% assign gw_property_name = trmnl.plugin_settings.custom_fields_values.property_name | default: "Rad Retreat" %}
+{% assign gw_greeting_style = trmnl.plugin_settings.custom_fields_values.greeting_style | default: "family" %}
+
+{% comment %} ---------- Choose the active reservation ----------
+  Feature the reservation that is active at the exact render time, comparing the
+  current UTC epoch against each reservation's check-in (start) and check-out (end)
+  timestamps: start <= now < end. This keys off time-of-day, not just the date, so a
+  same-day turnover never shows the wrong name. Between a check-out and the next
+  check-in (the turnover gap) nothing is active, so the plugin is skipped entirely
+  (see TRMNL_SKIP_DISPLAY below). There is no "upcoming" fallback.
+
+  Falls back to date-only comparison only when a reservation lacks usable timestamps.
+{% endcomment %}
+{% assign gw_has_guest = false %}
+
+{% if gw_events_size > 0 %}
+  {% for event in gw_events %}
+    {% assign gw_start_epoch = event.start | date: "%s" | plus: 0 %}
+    {% assign gw_end_epoch = event.end | date: "%s" | plus: 0 %}
+    {% assign gw_active = false %}
+    {% if gw_start_epoch > 0 and gw_end_epoch > 0 %}
+      {% if gw_start_epoch <= gw_now_utc_epoch and gw_now_utc_epoch < gw_end_epoch %}
+        {% assign gw_active = true %}
+      {% endif %}
+    {% elsif event.start_date <= gw_today_local_date and event.end_date >= gw_today_local_date %}
+      {% assign gw_active = true %}
+    {% endif %}
+    {% if gw_active %}
+      {% assign gw_featured = event %}
+      {% assign gw_has_guest = true %}
+      {% break %}
+    {% endif %}
+  {% endfor %}
+{% endif %}
+
+{% if gw_has_guest == false %}
+<script>
+  window.TRMNL_SKIP_DISPLAY = true;
+</script>
+{% endif %}
+
+{% comment %} ---------- Derive greeting name from the featured reservation ---------- {% endcomment %}
+{% assign gw_greeting_name = "" %}
+{% assign gw_stay_range = "" %}
+{% assign gw_nights_label = "" %}
+
+{% if gw_has_guest %}
+  {% assign gw_guest_full = "" %}
+  {% if gw_featured.description contains "Guest: " %}
+    {% assign gw_after_guest = gw_featured.description | split: "Guest: " | last %}
+    {% assign gw_guest_full = gw_after_guest | split: gw_newline | first | strip %}
+  {% else %}
+    {% assign gw_guest_full = gw_featured.summary | strip %}
+  {% endif %}
+
+  {% assign gw_name_words = gw_guest_full | split: " " %}
+  {% assign gw_surname = gw_name_words | last | capitalize %}
+
+  {% if gw_greeting_style == "surname" %}
+    {% assign gw_greeting_name = gw_surname %}
+  {% elsif gw_greeting_style == "full_name" %}
+    {% assign gw_greeting_name = gw_guest_full %}
+  {% else %}
+    {% assign gw_greeting_name = gw_surname | append: " Family" %}
+  {% endif %}
+
+  {% comment %} ---------- Stay date range (date-only, no timezone shift) ---------- {% endcomment %}
+  {% assign gw_start_year = gw_featured.start_date | date: "%Y" %}
+  {% assign gw_end_year = gw_featured.end_date | date: "%Y" %}
+  {% assign gw_start_month = gw_featured.start_date | date: "%B" %}
+  {% assign gw_end_month = gw_featured.end_date | date: "%B" %}
+  {% assign gw_start_day = gw_featured.start_date | date: "%-d" %}
+  {% assign gw_end_day = gw_featured.end_date | date: "%-d" %}
+
+  {% capture gw_stay_range %}{% if gw_start_year != gw_end_year %}{{ gw_start_month }} {{ gw_start_day }}, {{ gw_start_year }} – {{ gw_end_month }} {{ gw_end_day }}, {{ gw_end_year }}{% elsif gw_start_month != gw_end_month %}{{ gw_start_month }} {{ gw_start_day }} – {{ gw_end_month }} {{ gw_end_day }}, {{ gw_end_year }}{% else %}{{ gw_start_month }} {{ gw_start_day }} – {{ gw_end_day }}, {{ gw_end_year }}{% endif %}{% endcapture %}
+
+  {% comment %} ---------- Nights (friendly, singular/plural aware) ---------- {% endcomment %}
+  {% if gw_featured.description contains "Nights: " %}
+    {% assign gw_nights_after = gw_featured.description | split: "Nights: " | last %}
+    {% assign gw_nights = gw_nights_after | split: gw_newline | first | strip %}
+    {% if gw_nights != "" %}
+      {% capture gw_nights_label %}{{ gw_nights }} night{% unless gw_nights == "1" %}s{% endunless %}{% endcapture %}
+    {% endif %}
+  {% endif %}
+{% endif %}
+
+{% assign gw_welcome_line = "Welcome to " | append: gw_property_name %}
+{% assign gw_site_name = "radretreat.com" %}

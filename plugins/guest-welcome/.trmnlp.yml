@@ -1,0 +1,20 @@
+# TRMNLP configuration
+# {{ env.VARIABLE }} interpolation is available here
+---
+watch:
+  - .trmnlp.yml
+  - src
+
+# values of custom fields (defined in src/settings.yml)
+custom_fields:
+  property_name: Rad Retreat
+  greeting_style: family
+
+# override variables
+variables:
+  trmnl:
+    user:
+      locale: en-US
+      time_zone: America/Denver
+      time_zone_iana: America/Denver
+      utc_offset: -21600

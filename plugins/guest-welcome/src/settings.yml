@@ -1,0 +1,30 @@
+---
+strategy: webhook
+no_screen_padding: 'no'
+dark_mode: 'no'
+static_data: ''
+framework_version: 3.1.0
+custom_fields:
+- keyname: author_bio
+  field_type: author_bio
+  name: About This Plugin
+  description: Maintained by Jason Waters. A friendly welcome screen for guests staying at The Rad Retreat at Desert Color. Greets the guest currently checked in by name (keying off exact check-in/check-out times) and shows their stay dates. Reads a reservation smart-window posted to the plugin webhook, and is skipped automatically when no reservation is active.
+  category: personal,travel
+  github_url: https://github.com/jasonwaters/trmnl
+  learn_more_url: https://radretreat.com
+- keyname: property_name
+  field_type: string
+  name: Property Name
+  default: Rad Retreat
+  help_text: Shown in the "Welcome to ..." line above the guest name.
+- keyname: greeting_style
+  field_type: select
+  name: Greeting Style
+  default: family
+  options:
+  - Surname + Family (Nelson Family): family
+  - Surname only (Nelson): surname
+  - Full name as booked (Jason Waters): full_name
+  help_text: How the guest is addressed. Most bookings only include a last name.
+name: Guest Welcome
+refresh_interval: 15

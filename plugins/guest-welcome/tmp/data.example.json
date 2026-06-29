@@ -1,0 +1,61 @@
+{
+  "events": [
+      {
+          "uid": "reservation-507845@trackhs",
+          "summary": "\u2713 Whiteside",
+          "description": "Guest: Whiteside\nBooking Source: Guest\nProperty: The Rad Retreat at Desert Color\nNights: 2\nStatus: Checked Out\nReservation ID: 507845",
+          "status": "TENTATIVE",
+          "location": "The Rad Retreat at Desert Color",
+          "start": "2026-05-23T21:00:00.000Z",
+          "end": "2026-05-25T17:00:00.000Z",
+          "all_day": false,
+          "start_date": "2026-05-23",
+          "end_date": "2026-05-25",
+          "source": "Reservations 2026"
+      },
+      {
+          "uid": "reservation-495454@trackhs",
+          "summary": "\ud83c\udfe0 Tolman",
+          "description": "Guest: Tolman\nBooking Source: Owner Stay - RR Clean\nProperty: The Rad Retreat at Desert Color\nNights: 32\nStatus: Checked In\nReservation ID: 495454",
+          "status": "TENTATIVE",
+          "location": "The Rad Retreat at Desert Color",
+          "start": "2026-05-29T22:00:00.000Z",
+          "end": "2026-06-30T17:00:00.000Z",
+          "all_day": false,
+          "start_date": "2026-05-29",
+          "end_date": "2026-06-30",
+          "source": "Reservations 2026"
+      },
+      {
+          "uid": "reservation-510146@trackhs",
+          "summary": "\u2705 Nelson",
+          "description": "Guest: Nelson\nBooking Source: Guest\nProperty: The Rad Retreat at Desert Color\nNights: 2\nStatus: Confirmed\nReservation ID: 510146",
+          "status": "CONFIRMED",
+          "location": "The Rad Retreat at Desert Color",
+          "start": "2026-07-03T22:00:00.000Z",
+          "end": "2026-07-05T17:00:00.000Z",
+          "all_day": false,
+          "start_date": "2026-07-03",
+          "end_date": "2026-07-05",
+          "source": "Reservations 2026"
+      },
+      {
+          "uid": "reservation-495784@trackhs",
+          "summary": "\u2705 Loomis",
+          "description": "Guest: Loomis\nBooking Source: Guest\nProperty: The Rad Retreat at Desert Color\nNights: 7\nStatus: Confirmed\nReservation ID: 495784",
+          "status": "CONFIRMED",
+          "location": "The Rad Retreat at Desert Color",
+          "start": "2026-07-11T22:00:00.000Z",
+          "end": "2026-07-18T17:00:00.000Z",
+          "all_day": false,
+          "start_date": "2026-07-11",
+          "end_date": "2026-07-18",
+          "source": "Reservations 2026"
+      }
+  ],
+  "calendar_name": "Reservations 2026",
+  "sources": [
+      "Reservations 2026"
+  ],
+  "generated_at": "2026-06-29T17:23:01.695Z"
+}

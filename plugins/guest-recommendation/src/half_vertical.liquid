@@ -1,0 +1,18 @@
+<div class="layout layout--col layout--center gr-stage gr-narrow w--full h--full p--3">
+  <div class="gr-frame flex flex--col flex--center-y flex--center-x text--center gap--small w--full h--full">
+    <div class="gr-icon">
+      <div class="gr-icon-art">{{ gr_icon_markup }}</div>
+    </div>
+
+    {% if gr_tag != "" %}<span class="gr-eyebrow">{{ gr_tag }}</span>{% endif %}
+    <span class="gr-title">{{ gr_title }}</span>
+    <hr class="gr-rule" />
+    <span class="gr-body">{{ gr_body }}</span>
+  </div>
+</div>
+
+{% if gr_show_title_bar %}
+<div class="title_bar gr-titlebar">
+  <span class="title">{{ gr_site_name }}</span>
+</div>
+{% endif %}

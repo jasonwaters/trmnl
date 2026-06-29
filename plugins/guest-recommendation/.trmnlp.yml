@@ -1,0 +1,14 @@
+# TRMNLP configuration
+---
+watch:
+  - .trmnlp.yml
+  - src
+custom_fields:
+  show_title_bar: 'true'
+variables:
+  trmnl:
+    user:
+      locale: en-US
+      time_zone: America/Denver
+      time_zone_iana: America/Denver
+      utc_offset: -21600

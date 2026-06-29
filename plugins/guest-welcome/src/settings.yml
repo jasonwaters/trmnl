@@ -26,5 +26,13 @@ custom_fields:
   - Surname only (Nelson): surname
   - Full name as booked (Jason Waters): full_name
   help_text: How the guest is addressed. Most bookings only include a last name.
+- keyname: show_title_bar
+  field_type: select
+  name: Title Bar
+  default: 'true'
+  options:
+  - Show "radretreat.com" title bar: 'true'
+  - Hide title bar: 'false'
+  help_text: Toggle the bottom title bar on or off.
 name: Guest Welcome
 refresh_interval: 15

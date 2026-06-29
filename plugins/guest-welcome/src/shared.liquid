@@ -53,6 +53,14 @@
 {% assign gw_property_name = trmnl.plugin_settings.custom_fields_values.property_name | default: "Rad Retreat" %}
 {% assign gw_greeting_style = trmnl.plugin_settings.custom_fields_values.greeting_style | default: "family" %}
 
+{% comment %} Title bar toggle. Select is string-backed, so accept both string
+  ("false"/"no") and boolean forms; default to showing it. {% endcomment %}
+{% assign gw_show_title_bar_raw = trmnl.plugin_settings.custom_fields_values.show_title_bar | default: "true" %}
+{% assign gw_show_title_bar = true %}
+{% if gw_show_title_bar_raw == "false" or gw_show_title_bar_raw == false or gw_show_title_bar_raw == "no" %}
+  {% assign gw_show_title_bar = false %}
+{% endif %}
+
 {% comment %} ---------- Choose the active reservation ----------
   Feature the reservation that is active at the exact render time, comparing the
   current UTC epoch against each reservation's check-in (start) and check-out (end)
@@ -138,3 +146,112 @@
 
 {% assign gw_welcome_line = "Welcome to " | append: gw_property_name %}
 {% assign gw_site_name = "radretreat.com" %}
+
+{% comment %}
+  ---------- Brand styling (radretreat.com) ----------
+  Custom CSS is used here intentionally: the TRMNL framework has no letter-spacing
+  utility and does not bundle the site's brand fonts (Bricolage Grotesque display +
+  Nunito Sans body). Layout/structure still uses framework classes; these rules only
+  add brand typography and a few editorial flourishes (hairline frame, rule, pill).
+{% endcomment %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Nunito+Sans:ital,opsz,wght@0,6..12,400;0,6..12,600;0,6..12,700&display=swap" rel="stylesheet">
+
+<style>
+  .gw-stage {
+    font-family: "Nunito Sans", sans-serif;
+    color: #000;
+  }
+
+  .gw-frame {
+    border: 2px solid #000;
+    padding: 32px 40px;
+  }
+
+  .gw-eyebrow {
+    font-family: "Nunito Sans", sans-serif;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.34em;
+    font-size: 19px;
+    line-height: 1.2;
+    /* compensate trailing tracking so text stays optically centered */
+    text-indent: 0.34em;
+    color: #000;
+  }
+
+  .gw-name {
+    display: block;
+    font-family: "Bricolage Grotesque", "Nunito Sans", sans-serif;
+    font-weight: 800;
+    text-transform: uppercase;
+    /* No negative tracking: on 1-bit e-paper, overlapping anti-aliased glyph
+       edges dither into muddy/fuzzy strokes. Slight positive tracking keeps
+       each letter's edge isolated and crisp after thresholding. */
+    letter-spacing: 0.01em;
+    line-height: 0.95;
+    font-size: 72px;
+    /* Lock the variable optical-size axis: at display sizes the auto opsz
+       flares stroke terminals, and those tapered edges dither on 1-bit. */
+    font-optical-sizing: none;
+    /* Fatten glyphs by a hairline so the anti-aliased gray edge pixels fall to
+       solid black instead of being error-diffused (the fuzzy right/bottom
+       fringe). This is what crisps up large display text on 1-bit e-paper. */
+    -webkit-text-stroke: 0.6px #000;
+    color: #000;
+  }
+
+  .gw-narrow .gw-name { font-size: 52px; }
+  .gw-compact .gw-name { font-size: 34px; line-height: 0.95; }
+
+  .gw-rule {
+    width: 120px;
+    height: 0;
+    border: 0;
+    border-top: 3px solid #000;
+  }
+
+  .gw-dates {
+    font-family: "Bricolage Grotesque", "Nunito Sans", sans-serif;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-size: 30px;
+    line-height: 1.1;
+    color: #000;
+  }
+
+  .gw-nights {
+    display: inline-block;
+    font-family: "Nunito Sans", sans-serif;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    text-indent: 0.18em;
+    font-size: 14px;
+    line-height: 1;
+    padding: 7px 18px;
+    /* Solid fill instead of a thin curved outline: large flat black areas
+       threshold cleanly to pure black on 1-bit e-paper, whereas a 2px rounded
+       border dithers along the curve. Reads as a crisp editorial "stamp". */
+    color: #fff;
+    background: #000;
+    border: 0;
+    border-radius: 4px;
+  }
+
+  .gw-titlebar .title {
+    font-family: "Nunito Sans", sans-serif !important;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: lowercase;
+  }
+
+  /* Compact tier for short/small layouts (half_horizontal, quadrant) */
+  .gw-compact .gw-frame { padding: 16px 22px; }
+  .gw-compact .gw-eyebrow { font-size: 12px; letter-spacing: 0.26em; text-indent: 0.26em; }
+  .gw-compact .gw-rule { width: 72px; border-top-width: 2px; }
+  .gw-compact .gw-dates { font-size: 18px; }
+  .gw-compact .gw-nights { font-size: 11px; padding: 4px 11px; }
+</style>

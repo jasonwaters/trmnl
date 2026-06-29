@@ -1,21 +1,21 @@
-<div class="layout layout--col layout--center text--center w--full h--full p--2">
+<div class="layout layout--col layout--center gw-stage gw-compact w--full h--full p--1">
   {% if gw_has_guest %}
-    <div class="flex flex--col flex--center-y flex--center-x gap--small w--full">
-      <span class="label label--small">Welcome</span>
+    <div class="gw-frame flex flex--col flex--center-y flex--center-x text--center gap--small w--full h--full">
+      <span class="gw-eyebrow">Welcome</span>
 
-      <span class="value value--large" data-value-fit="true" data-value-fit-max-height="70">
-        {{ gw_greeting_name }}
-      </span>
+      <span class="gw-name">{{ gw_greeting_name }}</span>
 
-      <span class="label label--small text--gray-3">{{ gw_stay_range }}</span>
+      <span class="gw-dates">{{ gw_stay_range }}</span>
     </div>
   {% else %}
-    <div class="flex flex--col flex--center-y flex--center-x w--full">
-      <span class="value value--medium">{{ gw_welcome_line }}</span>
+    <div class="gw-frame flex flex--col flex--center-y flex--center-x text--center w--full h--full">
+      <span class="gw-eyebrow">Welcome</span>
     </div>
   {% endif %}
 </div>
 
-<div class="title_bar">
+{% if gw_show_title_bar %}
+<div class="title_bar gw-titlebar">
   <span class="title">{{ gw_site_name }}</span>
 </div>
+{% endif %}

@@ -9,7 +9,7 @@ A friendly welcome screen for guests staying at [The Rad Retreat at Desert Color
   reservation's check-in/check-out **timestamps** against the server clock).
 - Greets them warmly, e.g. **"Welcome to Rad Retreat" / "Nelson Family" / "July 3 – 5, 2026"**.
 - Shows **stay dates only** (no check-in/out times).
-- Title bar reads **radretreat.com**.
+- Optional title bar reads **radretreat.com** (toggle with the `show_title_bar` setting).
 
 **Active reservations only.** If no reservation is active at render time, the plugin
 sets `window.TRMNL_SKIP_DISPLAY = true` so TRMNL skips it in the playlist rather than
@@ -55,7 +55,22 @@ because the device itself is asleep between refreshes.
 - `half_horizontal` (800x240)
 - `quadrant` (400x240)
 
-All layouts are pure TRMNL Framework v3 markup - no JavaScript and no custom CSS - so multiple instances are mashup-safe by construction.
+All layouts use TRMNL Framework v3 for structure and contain no JavaScript, so multiple
+instances are mashup-safe by construction.
+
+## Styling
+
+Layout and structure use TRMNL Framework v3 classes. A single small `<style>` block in
+`shared.liquid` adds brand styling aligned to [radretreat.com](https://radretreat.com),
+which the framework cannot express on its own:
+
+- **Brand fonts** - Bricolage Grotesque (uppercase display, for the guest name and dates)
+  and Nunito Sans (body), loaded from Google Fonts.
+- **Wide-tracked uppercase eyebrow**, a hairline rule, a hairline frame, and an outlined
+  "nights" pill that echoes the website hero's stat chips - none of which map to framework
+  utilities (the framework has no letter-spacing utility).
+
+Everything renders in pure black/white for crisp 1-bit and 2-bit e-ink output.
 
 ## Custom Fields
 
@@ -63,6 +78,7 @@ All layouts are pure TRMNL Framework v3 markup - no JavaScript and no custom CSS
 |-------|------|---------|-------------|
 | `property_name` | string | `Rad Retreat` | Shown in the "Welcome to ..." line. |
 | `greeting_style` | select | `family` | `Nelson Family`, `Nelson`, or the full name as booked. |
+| `show_title_bar` | select | `true` | Show or hide the bottom `radretreat.com` title bar. |
 
 ## Greeting Logic
 

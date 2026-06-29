@@ -9,6 +9,7 @@ watch:
 custom_fields:
   property_name: Rad Retreat
   greeting_style: family
+  show_title_bar: 'true'
 
 # override variables
 variables:

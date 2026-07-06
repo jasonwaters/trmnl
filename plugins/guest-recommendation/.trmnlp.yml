@@ -4,6 +4,8 @@ watch:
   - .trmnlp.yml
   - src
 custom_fields:
+  apps_script_url: ''
+  selection_mode: sequence
   show_title_bar: 'true'
 variables:
   trmnl:

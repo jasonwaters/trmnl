@@ -1,17 +1,11 @@
 {
-  "_comment": "Schema reference only. The live list lives in src/settings.yml under static_data (used for both local preview and production). Each item: icon (see README for keys), tag, title, body.",
-  "recommendations": [
-    {
-      "icon": "beach",
-      "tag": "Steps Away",
-      "title": "Make a Splash at the Lagoon",
-      "body": "Your stay includes full Desert Color access \u2014 a 2.5-acre lagoon with sandy beaches just a short walk from the door."
-    },
-    {
-      "icon": "mountains",
-      "tag": "Day Trip",
-      "title": "Explore Zion & Beyond",
-      "body": "You're 54 miles from Zion, 20 from Sand Hollow, and 15 from Tuacahn. Pack the cooler and make a day of the red rock."
-    }
-  ]
+  "_comment": "Schema reference for the polling payload returned by the Google Apps Script Web App (apps-script/Code.gs). The script selects one recommendation (sequential or random) and returns these flat fields. static_data in src/settings.yml mirrors this shape for local preview.",
+  "rec_icon": "beach",
+  "rec_tag": "Steps Away",
+  "rec_title": "Make a Splash at the Lagoon",
+  "rec_body": "Your stay includes full Desert Color access \u2014 a 2.5-acre lagoon with sandy beaches just a short walk from the door.",
+  "rec_mode": "sequence",
+  "rec_index": 0,
+  "rec_count": 14,
+  "rec_error": ""
 }

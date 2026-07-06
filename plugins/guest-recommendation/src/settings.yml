@@ -1,37 +1,43 @@
 name: 'Guest Recommendation'
 no_screen_padding: 'no'
 dark_mode: 'no'
-strategy: static
+strategy: polling
+polling_verb: get
+polling_url: '{{apps_script_url}}?mode={{selection_mode}}'
 refresh_interval: 60
 id: '982737'
 framework_version: 3.1.0
 static_data: |-
   {
-    "recommendations": [
-      { "icon": "beach", "tag": "Steps Away", "title": "Make a Splash at the Lagoon", "body": "Your stay includes full Desert Color access \u2014 a 2.5-acre lagoon with sandy beaches just a short walk from the door. Grab the beach chairs from the garage and go." },
-      { "icon": "hottub", "tag": "Resort Access", "title": "Two Pools, Three Hot Tubs", "body": "Trade the desert heat for resort water. Your access covers two heated pools and three hot tubs, and there are pool towels waiting by the door." },
-      { "icon": "paddleboard", "tag": "Gear Included", "title": "Take the Paddleboards Out", "body": "Two inflatable paddleboards and a pump are waiting in the garage. Glide across the lagoon before the afternoon crowd shows up." },
-      { "icon": "pickleball", "tag": "Resort Access", "title": "Game On \u2014 Pickleball", "body": "Six community courts are minutes away, and the paddles and balls are already here. Settle the bracket before dinner." },
-      { "icon": "disc", "tag": "Nearby", "title": "Play a Round of Disc Golf", "body": "Our favorite course, Grandpa's Pond in Hurricane (right by Quail Creek State Park), is a free, scenic 18 holes \u2014 a perfect golden-hour round with the crew." },
-      { "icon": "kitchen", "tag": "On-Site", "title": "Cook Something Great", "body": "This is a real-meal kitchen: gas range, convection oven, stand mixer, air fryer, and serving boards for ten. Breakfast before Zion? Easy." },
-      { "icon": "games", "tag": "Game Room", "title": "Press Start", "body": "A retro gaming setup, three big-screen TVs, and a shelf of board and card games mean tonight's plan is already handled." },
-      { "icon": "fire", "tag": "Rooftop", "title": "Sunset on the Rooftop", "body": "Head up to the rooftop deck and gather around the fire table \u2014 the best seat in the house for a Southern Utah sunset." },
-      { "icon": "charger", "tag": "Good to Know", "title": "Charge Everything", "body": "Every nightstand has chargers for your phone, watch, and headphones \u2014 so your tangle of cables can stay buried in your bag all week." },
-      { "icon": "office", "tag": "Need to Work?", "title": "An Office That Means Business", "body": "The fourth-floor office has a 32-inch monitor, keyboard, mouse, and gigabit Wi-Fi \u2014 a quiet place to look responsible on Zoom between adventures." },
-      { "icon": "mountains", "tag": "Day Trip", "title": "Explore Zion & Beyond", "body": "You're 54 miles from Zion, 20 from Sand Hollow, and 15 from Tuacahn. Pack the cooler and make a day of the red rock." },
-      { "icon": "sleep", "tag": "Rest Easy", "title": "Seriously Good Sleep", "body": "Purple mattresses, blackout shades, and adjustable bed frames in every room. Recover hard so you can play harder tomorrow." },
-      { "icon": "sandals", "tag": "Gear Included", "title": "Beach Day, Sorted", "body": "Four Tommy Bahama chairs, two umbrellas, goggles, and a pile of water toys are stocked in the garage. Just add sunshine." },
-      { "icon": "golf", "tag": "Nearby", "title": "Tee It Up", "body": "Crush Golf + Grill is a mile away and Sun River Golf Club just three. Garage storage keeps your clubs ready to roll." }
-    ]
+    "rec_icon": "beach",
+    "rec_tag": "Steps Away",
+    "rec_title": "Make a Splash at the Lagoon",
+    "rec_body": "Your stay includes full Desert Color access \u2014 a 2.5-acre lagoon with sandy beaches just a short walk from the door. Grab the beach chairs from the garage and go.",
+    "rec_mode": "sequence",
+    "rec_index": 0,
+    "rec_count": 14,
+    "rec_error": ""
   }
 custom_fields:
-  - keyname: author_bio
+  - keyname: setup_instructions
     field_type: author_bio
-    name: About This Plugin
-    description: Maintained by Jason Waters. A rotating recommendation screen for guests at The Rad Retreat at Desert Color. Each refresh surfaces a different amenity, feature, or nearby attraction with matching line art. Edit the recommendations list in this plugin's settings; no external data source is required.
-    category: personal,travel
-    github_url: https://github.com/jasonwaters/trmnl
+    name: Setup
+    description: 'Recommendations live in a Google Sheet with two tabs: <b>data</b> (row 1 headers: icon, tag, title, body; one recommendation per row after) and <b>state</b> (stores a single shared last-shown index in cell B2). A small Google Apps Script Web App reads the sheet and, in sequential mode, advances that index by one on each refresh and writes it back. Follow the plugin README to add the script, deploy it as a Web App (Execute as: Me, Who has access: Anyone), then paste the deployment URL below.'
+    github_url: https://github.com/jasonwaters/trmnl/tree/main/plugins/guest-recommendation
     learn_more_url: https://radretreat.com
+  - keyname: apps_script_url
+    field_type: string
+    name: Apps Script Web App URL
+    description: 'The deployment URL of your Google Apps Script Web App (ends in /exec). This is what lets the plugin read your sheet and, in sequential mode, advance and remember its place.'
+    placeholder: https://script.google.com/macros/s/AKfycb.../exec
+  - keyname: selection_mode
+    field_type: select
+    name: Selection Order
+    default: sequence
+    options:
+      - Show in order (sequential): sequence
+      - Show at random: random
+    help_text: 'Sequential walks through the data tab one row per refresh and remembers its place in the state tab; Random shows any row each refresh.'
   - keyname: show_title_bar
     field_type: select
     name: Title Bar
@@ -40,3 +46,10 @@ custom_fields:
       - Show "radretreat.com" title bar: 'true'
       - Hide title bar: 'false'
     help_text: Toggle the bottom title bar on or off.
+  - keyname: author_bio
+    field_type: author_bio
+    name: About This Plugin
+    description: Maintained by Jason Waters. A recommendation screen for guests at The Rad Retreat at Desert Color. Each refresh surfaces an amenity, feature, or nearby attraction with matching line art, drawn from a Google Sheet you control.
+    category: personal,travel
+    github_url: https://github.com/jasonwaters/trmnl
+    learn_more_url: https://radretreat.com

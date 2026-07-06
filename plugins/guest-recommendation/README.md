@@ -1,11 +1,13 @@
 # Guest Recommendation
 
-A rotating "things to do" screen for guests at **The Rad Retreat at Desert Color**.
-Each refresh surfaces a different amenity, feature, or nearby attraction with matching
-line art, so guests are reminded of everything the home and resort offer.
+A "things to do" screen for guests at **The Rad Retreat at Desert Color**. Each
+refresh surfaces an amenity, feature, or nearby attraction with matching line art,
+so guests are reminded of everything the home and resort offer.
 
-No external data source is required — every recommendation is stored right in the
-plugin settings, and the plugin picks one to show on each render.
+Recommendations are stored in a **Google Sheet you control**, so you can edit them
+without touching the plugin. A small **Google Apps Script Web App** reads the sheet
+and returns one item per refresh — and, in sequential mode, remembers its place by
+writing the last-shown row back to the sheet.
 
 ## Layouts
 
@@ -20,47 +22,90 @@ sits at the bottom.
 
 ## How a recommendation is chosen
 
-Selection is **time-seeded in Liquid** (server-side), so:
+Selection happens entirely in the Apps Script (one source of truth), and the plugin
+renders the single item it returns — server-side Liquid, **no client-side
+JavaScript**. Two modes, set by the **Selection Order** field:
 
-- every device refresh rotates to a different card,
-- the rendered e-ink image is correct with **no client-side JavaScript**, and
-- a prime multiplier spreads consecutive seeds across the list for variety.
+- **Sequential** — walks the `data` tab one row per refresh, in order. It stores the
+  last-shown row index in the `state` tab and increments it each time. At the end of
+  the list (or the first empty row) it wraps back to the first item.
+- **Random** — returns any row each refresh.
 
-If the system render time is unavailable (e.g. local preview), it falls back to the
-Liquid `now` filter.
+Why a Web App instead of the read-only CSV export (used by the `quotes` plugin)?
+Sequential mode needs to **write** its place back to the sheet. Google's CSV export
+URL is read-only, and TRMNL polling only reads during rendering. A Web App runs as
+you on Google's servers, so it can read *and* write your sheet without ever exposing
+a credential in the plugin.
 
-## Editing the recommendations
+## Google Sheet setup
 
-The list is the single thing you maintain. It lives in **`src/settings.yml`** under
-`static_data` as plain JSON. This same data is used for **both** local preview and the
-published plugin, so there is only one place to edit.
+Create a spreadsheet with two tabs:
 
-```json
-{
-  "recommendations": [
-    {
-      "icon": "beach",
-      "tag": "Steps Away",
-      "title": "Make a Splash at the Lagoon",
-      "body": "Your stay includes full Desert Color access — a 2.5-acre lagoon..."
-    }
-  ]
-}
-```
+**`data`** — row 1 is the header; one recommendation per row after it:
 
-Each item has four fields:
+| icon  | tag        | title                       | body                                    |
+| ----- | ---------- | --------------------------- | --------------------------------------- |
+| beach | Steps Away | Make a Splash at the Lagoon | Your stay includes full Desert Color… |
 
-| Field   | Purpose                                                            |
+**`state`** — used by sequential mode to remember the last-shown item. The script
+stores a single shared index in cell **`B2`** (and writes the label `shared` to
+`A2`), advancing it by one on each poll and wrapping at the end of the list:
+
+| A (label) | B (last_index) |
+| --------- | -------------- |
+| `shared`  | `4`            |
+
+You don't need to pre-fill this tab — the script writes the cell itself (and creates
+the `state` tab if it's missing).
+
+Why a single shared counter instead of one per device? On TRMNL/LaraPaper, polling
+runs at the plugin level and has **no device context** — the polling URL is resolved
+only against your custom-field values, so the device's `friendly_id` isn't available
+when the sheet is fetched. Device identity only exists at render time, which can't
+write back to the sheet. A shared counter is therefore the correct model (and is
+exactly right for a single device).
+
+Each `data` row has four columns:
+
+| Column  | Purpose                                                            |
 | ------- | ------------------------------------------------------------------ |
 | `icon`  | Which line-art icon to draw (see keys below). Unknown → palm tree. |
 | `tag`   | Small uppercase eyebrow above the title (e.g. `Nearby`).           |
 | `title` | The headline.                                                      |
 | `body`  | One or two sentences of enticing copy.                             |
 
-To add or remove a recommendation, just add or delete an object in the array.
+`recommendations.csv` in this folder is the current list, ready to paste/import into
+the `data` tab. Fully empty rows are skipped, so sequential mode wraps cleanly.
 
-`tmp/data.example.json` is a short schema reference only; it is **not** read at render
-time for this static plugin.
+## Apps Script setup
+
+1. In your sheet, open **Extensions → Apps Script**.
+2. Replace the default file contents with `apps-script/Code.gs` from this folder and
+   **Save**.
+3. **Deploy → New deployment → Web app**:
+   - **Execute as:** Me
+   - **Who has access:** Anyone
+4. Copy the **Web app URL** (ends in `/exec`) into the plugin's **Apps Script Web App
+   URL** setting.
+
+The plugin polls `<web-app-url>?mode=sequence|random` and receives flat JSON:
+
+```json
+{
+  "rec_icon": "beach",
+  "rec_tag": "Steps Away",
+  "rec_title": "Make a Splash at the Lagoon",
+  "rec_body": "Your stay includes full Desert Color access — a 2.5-acre lagoon…",
+  "rec_mode": "sequence",
+  "rec_index": 0,
+  "rec_count": 14,
+  "rec_error": ""
+}
+```
+
+`static_data` in `src/settings.yml` mirrors this shape so local preview renders a card
+without a live sheet. `tmp/data.example.json` is a schema reference for the same
+payload.
 
 ### Available icon keys
 
@@ -90,10 +135,12 @@ of the icon `case` in `src/shared.liquid`.
 
 ## Custom fields
 
-| Field            | Type        | Default  | Notes                                  |
-| ---------------- | ----------- | -------- | -------------------------------------- |
-| `show_title_bar` | select      | `true`   | Toggle the bottom `radretreat.com` bar |
-| `author_bio`     | author_bio  | —        | Plugin description / links             |
+| Field             | Type       | Default    | Notes                                                              |
+| ----------------- | ---------- | ---------- | ------------------------------------------------------------------ |
+| `apps_script_url` | string     | —          | Web App deployment URL (ends in `/exec`)                           |
+| `selection_mode`  | select     | `sequence` | `sequence` (in order, remembers place) or `random`                 |
+| `show_title_bar`  | select     | `true`     | Toggle the bottom `radretreat.com` bar                             |
+| `author_bio`      | author_bio | —          | Plugin description / links                                         |
 
 ## Styling
 
@@ -110,5 +157,7 @@ npm run logs     # tail logs
 npm stop         # stop
 ```
 
-Because this is a `static` plugin, edits to `static_data` in `src/settings.yml`
-show up in the preview on the next render.
+Local preview renders from `static_data` in `src/settings.yml` (a single sample
+recommendation), since the Apps Script Web App is not polled locally. Edit
+`static_data` to preview a different card. The live sheet + Web App drive the
+published plugin.

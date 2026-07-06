@@ -1,14 +1,20 @@
 {% comment %}
   Guest Recommendation - shared context.
 
-  Surfaces one recommendation (amenity, feature, or nearby attraction) per render,
-  chosen from the `recommendations` list. The list is plain JSON the operator edits
-  in plugin settings (static_data) / tmp/data.json locally - add and remove freely.
+  Surfaces one recommendation (amenity, feature, or nearby attraction) per render.
+  Data comes from a Google Sheet via a Google Apps Script Web App (see the README
+  and apps-script/Code.gs). The script owns all selection logic - sequential
+  (walking the sheet one row per refresh and storing its place in the "state" tab)
+  or random - and returns a single already-chosen item as flat JSON:
 
-  Selection is time-seeded so each device refresh rotates to a different card, with
-  no JS needed (server-side Liquid renders cleanly to the e-ink image). Matching
-  line art for each card is inlined as a stroke-only SVG, which stays crisp on
-  1-bit / 2-bit grayscale. Every id is per-instance, so the plugin is mashup-safe.
+    rec_icon, rec_tag, rec_title, rec_body, rec_mode, rec_index, rec_count, rec_error
+
+  Keeping selection server-side in the script (single source of truth) means this
+  template is a pure renderer: no client-side JS, no duplicated selection logic. The
+  matching line art is inlined as a stroke-only SVG, which stays crisp on 1-bit /
+  2-bit grayscale. Every id is per-instance, so the plugin is mashup-safe.
+
+  `static_data` in settings.yml mirrors the response shape for local preview.
 {% endcomment %}
 
 {% comment %} ---------- Title bar toggle (string- or boolean-backed select) ---------- {% endcomment %}
@@ -20,32 +26,28 @@
 
 {% assign gr_site_name = "radretreat.com" %}
 
-{% comment %} ---------- Pick one recommendation ----------
-  Seed off the render time so the card rotates every refresh. Fall back to the
-  Liquid "now" filter when the system timestamp is unavailable (local preview).
-  The prime multiplier spreads consecutive seeds across the list. {% endcomment %}
-{% assign gr_count = recommendations | size %}
-{% assign gr_index = 0 %}
-{% if gr_count > 0 %}
-  {% assign gr_seed = trmnl.system.timestamp_utc | plus: 0 %}
-  {% if gr_seed == 0 %}{% assign gr_seed = "now" | date: "%s" | plus: 0 %}{% endif %}
-  {% assign gr_index = gr_seed | times: 7919 | modulo: gr_count %}
-{% endif %}
+{% comment %} ---------- Resolve the recommendation ----------
+  The Apps Script has already chosen the item, so we just read the flat fields
+  from the polling payload. The Liquid `default` filter also fills empty strings,
+  so a missing icon falls back to the palm glyph. When the payload carries an
+  error, or has no content at all, show a friendly message instead of a blank
+  card. {% endcomment %}
+{% assign gr_error = rec_error | default: "" %}
+{% assign gr_icon = rec_icon | default: "palm" %}
+{% assign gr_tag = rec_tag | default: "" %}
+{% assign gr_title = rec_title | default: "" %}
+{% assign gr_body = rec_body | default: "" %}
 
-{% assign gr_icon = "palm" %}
-{% assign gr_tag = "" %}
-{% assign gr_title = "" %}
-{% assign gr_body = "" %}
-{% if gr_count > 0 %}
-  {% for r in recommendations %}
-    {% if forloop.index0 == gr_index %}
-      {% assign gr_icon = r.icon | default: "palm" %}
-      {% assign gr_tag = r.tag | default: "" %}
-      {% assign gr_title = r.title | default: "" %}
-      {% assign gr_body = r.body | default: "" %}
-      {% break %}
-    {% endif %}
-  {% endfor %}
+{% if gr_error != "" %}
+  {% assign gr_icon = "palm" %}
+  {% assign gr_tag = "Setup" %}
+  {% assign gr_title = "Sheet unavailable" %}
+  {% assign gr_body = gr_error %}
+{% elsif gr_title == "" and gr_body == "" %}
+  {% assign gr_icon = "palm" %}
+  {% assign gr_tag = "" %}
+  {% assign gr_title = "No recommendations yet" %}
+  {% assign gr_body = "Add rows to your Google Sheet to show recommendations here." %}
 {% endif %}
 
 {% comment %}

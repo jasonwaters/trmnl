@@ -107,6 +107,17 @@ The plugin polls `<web-app-url>?mode=sequence|random` and receives flat JSON:
 without a live sheet. `tmp/data.example.json` is a schema reference for the same
 payload.
 
+### If a refresh fails or times out
+
+A cold Apps Script or a slow network can make a poll fail or time out. When that
+happens the plugin does **not** replace a good screen with an error or empty-state
+card — guests just keep seeing the last recommendation. `src/shared.liquid` detects
+both the script's own `rec_error` and TRMNL's platform `{"error":"Failed to fetch
+data"}` payload, and in either case sets `window.TRMNL_SKIP_DISPLAY = true` so the
+device skips that refresh. The failure state resolves on the next successful poll.
+(The friendly "Sheet unavailable" / "No recommendations yet" text is still rendered
+for local preview and first-run setup, where there is no prior screen to keep.)
+
 ### Available icon keys
 
 `beach` (lagoon / beach umbrella), `hottub` (pools / hot tubs), `paddleboard`,

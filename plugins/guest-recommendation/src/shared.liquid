@@ -29,25 +29,45 @@
 {% comment %} ---------- Resolve the recommendation ----------
   The Apps Script has already chosen the item, so we just read the flat fields
   from the polling payload. The Liquid `default` filter also fills empty strings,
-  so a missing icon falls back to the palm glyph. When the payload carries an
-  error, or has no content at all, show a friendly message instead of a blank
-  card. {% endcomment %}
-{% assign gr_error = rec_error | default: "" %}
+  so a missing icon falls back to the palm glyph.
+
+  Two error sources are folded into `gr_error`: `rec_error` (the Apps Script's own
+  error, e.g. an empty sheet or a lock failure) and the platform's top-level
+  `error` key, which TRMNL injects as `{"error":"Failed to fetch data"}` when the
+  poll itself fails or times out before the script can answer.
+
+  When there is nothing real to show, we set `gr_skip_display` so the layouts can
+  emit `window.TRMNL_SKIP_DISPLAY` and the device keeps the last good
+  recommendation on screen - guests never see an error or empty-state card. The
+  fallback title/body are still rendered for local preview and first-run setup,
+  where there is no prior screen to preserve. {% endcomment %}
+{% assign gr_error = rec_error | default: error | default: "" %}
 {% assign gr_icon = rec_icon | default: "palm" %}
 {% assign gr_tag = rec_tag | default: "" %}
 {% assign gr_title = rec_title | default: "" %}
 {% assign gr_body = rec_body | default: "" %}
+{% assign gr_skip_display = false %}
 
 {% if gr_error != "" %}
+  {% assign gr_skip_display = true %}
   {% assign gr_icon = "palm" %}
   {% assign gr_tag = "Setup" %}
   {% assign gr_title = "Sheet unavailable" %}
   {% assign gr_body = gr_error %}
 {% elsif gr_title == "" and gr_body == "" %}
+  {% assign gr_skip_display = true %}
   {% assign gr_icon = "palm" %}
   {% assign gr_tag = "" %}
   {% assign gr_title = "No recommendations yet" %}
   {% assign gr_body = "Add rows to your Google Sheet to show recommendations here." %}
+{% endif %}
+
+{% comment %} Keep the last good screen on-device when there is nothing to show.
+  Rendered from shared context so every layout inherits the behavior. {% endcomment %}
+{% if gr_skip_display %}
+<script>
+  window.TRMNL_SKIP_DISPLAY = true;
+</script>
 {% endif %}
 
 {% comment %}
